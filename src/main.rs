@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use bevy::{
+    input::mouse::MouseMotion,
+    window::{Window, PrimaryWindow},
+    prelude::*, render::camera,
+};
 
 fn main() {
     App::new()
@@ -57,10 +61,25 @@ fn setup(
 }
 
 fn player_move(
-    mut query: Query<&mut Transform, With<Player>>,
+    mut players: Query<(&mut Transform, &Children), (With<Player>, Without<Camera3d>)>,
+    mut cameras: Query<&mut Transform, With<Camera3d>>,
+    windows: Query<&Window, &PrimaryWindow>,
+    mut mouse_motion_events: EventReader<MouseMotion>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    for mut transform in query.iter_mut() {
+    let window = windows.get_single().unwrap();
+    for (mut transform, children) in players.iter_mut() {
+        // rotation
+        for event in mouse_motion_events.iter() {
+            transform.rotate_y(event.delta.x / window.width()  * 0.001);
+            for &child in children {
+                if let Ok(mut camera_transform) = cameras.get_mut(child) {
+                    camera_transform.rotate_local_x(event.delta.y / window.height() * 0.001);
+                }
+            }
+        }
+
+        // translate
         let z = transform.local_z();
         let x = transform.local_x();
         if keyboard_input.pressed(KeyCode::W) {
