@@ -40,29 +40,40 @@ fn setup(
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..default()
     });
-    // camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    }).insert(Player);
+    // player
+    commands.spawn(
+        Player
+    ).insert(
+        TransformBundle {
+            local: Transform::from_xyz(-2.0, 0.0, 5.0),
+            ..default()
+        }
+    ).with_children(|parent| {
+        parent.spawn(Camera3dBundle {
+            transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
+            ..default()
+        });
+    });
 }
 
 fn player_move(
-    mut query: Query<(&Player, &mut Transform)>,
+    mut query: Query<&mut Transform, With<Player>>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    for (_, mut transform) in query.iter_mut() {
+    for mut transform in query.iter_mut() {
+        let z = transform.local_z();
+        let x = transform.local_x();
         if keyboard_input.pressed(KeyCode::W) {
-            transform.translation.z += -0.1;
+            transform.translation -= z * 0.1;
         }
         if keyboard_input.pressed(KeyCode::S) {
-            transform.translation.z += 0.1;
+            transform.translation += z * 0.1;
         }
         if keyboard_input.pressed(KeyCode::A) {
-            transform.translation.x += -0.1;
+            transform.translation -= x * 0.1;
         }
         if keyboard_input.pressed(KeyCode::D) {
-            transform.translation.x += 0.1;
+            transform.translation += x * 0.1;
         }
     }
 }
