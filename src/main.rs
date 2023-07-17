@@ -1,7 +1,7 @@
 use bevy::{
     input::mouse::MouseMotion,
     window::{Window, PrimaryWindow},
-    prelude::*, render::camera,
+    prelude::*,
 };
 
 fn main() {
@@ -68,31 +68,33 @@ fn player_move(
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     let window = windows.get_single().unwrap();
+    let camera_sensitivity = Vec2::new(0.001, 0.001);
     for (mut transform, children) in players.iter_mut() {
         // rotation
         for event in mouse_motion_events.iter() {
-            transform.rotate_y(event.delta.x / window.width()  * 0.001);
+            transform.rotate_y(camera_sensitivity.x * event.delta.x / window.width());
             for &child in children {
                 if let Ok(mut camera_transform) = cameras.get_mut(child) {
-                    camera_transform.rotate_local_x(event.delta.y / window.height() * 0.001);
+                    camera_transform.rotate_local_x(camera_sensitivity.y * event.delta.y / window.height());
                 }
             }
         }
 
         // translate
+        let movement_speed = 0.1;
         let z = transform.local_z();
         let x = transform.local_x();
         if keyboard_input.pressed(KeyCode::W) {
-            transform.translation -= z * 0.1;
+            transform.translation -= z * movement_speed;
         }
         if keyboard_input.pressed(KeyCode::S) {
-            transform.translation += z * 0.1;
+            transform.translation += z * movement_speed;
         }
         if keyboard_input.pressed(KeyCode::A) {
-            transform.translation -= x * 0.1;
+            transform.translation -= x * movement_speed;
         }
         if keyboard_input.pressed(KeyCode::D) {
-            transform.translation += x * 0.1;
+            transform.translation += x * movement_speed;
         }
     }
 }
