@@ -15,6 +15,9 @@ fn main() {
 #[derive(Component)]
 struct Player;
 
+#[derive(Component)]
+struct EulerAttitude(Vec3);
+
 /// set up a simple 3D scene
 fn setup(
     mut commands: Commands,
@@ -56,13 +59,15 @@ fn setup(
         parent.spawn(Camera3dBundle {
             transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
             ..default()
+        }).insert(EulerAttitude {
+            0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }
         });
     });
 }
 
 fn player_move(
     mut players: Query<(&mut Transform, &Children), (With<Player>, Without<Camera3d>)>,
-    mut cameras: Query<&mut Transform, With<Camera3d>>,
+    mut cameras: Query<(&mut Transform, &mut EulerAttitude), With<Camera3d>>,
     windows: Query<&Window, &PrimaryWindow>,
     mut mouse_motion_events: EventReader<MouseMotion>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -74,8 +79,11 @@ fn player_move(
         for event in mouse_motion_events.iter() {
             transform.rotate_y(camera_sensitivity.x * event.delta.x / window.width());
             for &child in children {
-                if let Ok(mut camera_transform) = cameras.get_mut(child) {
-                    camera_transform.rotate_local_x(camera_sensitivity.y * event.delta.y / window.height());
+                if let Ok((mut camera_transform, mut camera_attitude)) = cameras.get_mut(child) {
+                    camera_attitude.0.x = (
+                        camera_attitude.0.x + camera_sensitivity.y * event.delta.y / window.height()
+                    ).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
+                    camera_transform.rotation = Quat::from_euler(EulerRot::YXZ, camera_attitude.0.y, camera_attitude.0.x, camera_attitude.0.z);
                 }
             }
         }
