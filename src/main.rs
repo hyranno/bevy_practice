@@ -70,7 +70,7 @@ fn setup(
     // camera
     let camera = commands
         .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
+            transform: Transform::from_xyz(0.0, 2.5, 0.0),
             ..default()
         })
         .insert(EulerAttitude {0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }})
@@ -104,7 +104,7 @@ fn player_move(
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     let window = windows.get_single().unwrap();
-    let camera_sensitivity = Vec2::new(0.001, 0.001);
+    let camera_sensitivity = -Vec2::new(1.0, 1.0);
     for (mut transform, mut velocity, children) in players.iter_mut() {
         // rotation
         for event in mouse_motion_events.iter() {
