@@ -66,6 +66,18 @@ fn setup(
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..default()
     });
+    // camera
+    let camera = commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
+        ..default()
+    }).insert(EulerAttitude {
+        0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+    }).insert(ScreenSpaceAmbientOcclusionBundle {
+        settings: ScreenSpaceAmbientOcclusionSettings {
+            quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
+        },
+        ..default()
+    }).id();
     // player
     commands.spawn(
         Player
@@ -82,19 +94,9 @@ fn setup(
         LockedAxes::ROTATION_LOCKED
     ).insert(
         Collider::capsule_y(1.5, 0.3)
-    ).with_children(|parent| {
-        parent.spawn(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
-            ..default()
-        }).insert(EulerAttitude {
-            0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }
-        }).insert(ScreenSpaceAmbientOcclusionBundle {
-            settings: ScreenSpaceAmbientOcclusionSettings {
-                quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
-            },
-            ..default()
-        });
-    });
+    ).add_child(
+        camera
+    );
 }
 
 fn player_move(
