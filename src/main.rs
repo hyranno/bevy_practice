@@ -1,6 +1,10 @@
 use bevy::{
     input::mouse::MouseMotion,
     window::{Window, PrimaryWindow},
+    pbr::{
+        ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionQualityLevel,
+        ScreenSpaceAmbientOcclusionSettings,
+    },
     prelude::*,
 };
 use bevy_rapier3d::prelude::*;
@@ -9,6 +13,11 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        .insert_resource(Msaa::Off)
+        .insert_resource(AmbientLight {
+            brightness: 0.1,
+            ..default()
+        })
         .add_systems(Startup, setup)
         .add_systems(Update, player_move)
         .run();
@@ -79,6 +88,11 @@ fn setup(
             ..default()
         }).insert(EulerAttitude {
             0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+        }).insert(ScreenSpaceAmbientOcclusionBundle {
+            settings: ScreenSpaceAmbientOcclusionSettings {
+                quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
+            },
+            ..default()
         });
     });
 }
