@@ -15,10 +15,6 @@ fn main() {
         .add_plugins((DefaultPlugins, TemporalAntiAliasPlugin))
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .insert_resource(Msaa::Off)
-        .insert_resource(AmbientLight {
-            brightness: 0.1,
-            ..default()
-        })
         .add_systems(Startup, setup)
         .add_systems(Update, player_move)
         .run();
@@ -56,6 +52,11 @@ fn setup(
         .insert(Collider::cuboid(0.5, 0.5, 0.5))
         .insert(Restitution::coefficient(0.1));
     // light
+    commands
+        .insert_resource(AmbientLight {
+            brightness: 0.1,
+            ..default()
+        });
     commands
         .spawn(PointLightBundle {
             point_light: PointLight {
