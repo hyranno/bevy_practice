@@ -3,10 +3,12 @@ use bevy::{
     window::{Window, PrimaryWindow},
     prelude::*,
 };
+use bevy_rapier3d::prelude::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_systems(Startup, setup)
         .add_systems(Update, player_move)
         .run();
@@ -26,17 +28,25 @@ fn setup(
 ) {
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
+        mesh: meshes.add(shape::Plane::from_size(50.0).into()),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..default()
-    });
+    }).insert(
+        Collider::cuboid(50.0, 0.001, 50.0)
+    );
     // cube
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
         material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..default()
-    });
+    }).insert(
+        RigidBody::Dynamic
+    ).insert(
+        Collider::cuboid(0.5, 0.5, 0.5)
+    ).insert(
+        Restitution::coefficient(0.1)
+    );
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -55,6 +65,12 @@ fn setup(
             local: Transform::from_xyz(-2.0, 0.0, 5.0),
             ..default()
         }
+    ).insert(
+        RigidBody::Dynamic
+    ).insert(
+        LockedAxes::ROTATION_LOCKED
+    ).insert(
+        Collider::capsule_y(1.5, 0.3)
     ).with_children(|parent| {
         parent.spawn(Camera3dBundle {
             transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
