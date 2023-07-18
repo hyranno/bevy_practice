@@ -66,6 +66,8 @@ fn setup(
             ..default()
         }
     ).insert(
+        Velocity::default()
+    ).insert(
         RigidBody::Dynamic
     ).insert(
         LockedAxes::ROTATION_LOCKED
@@ -82,7 +84,7 @@ fn setup(
 }
 
 fn player_move(
-    mut players: Query<(&mut Transform, &Children), (With<Player>, Without<Camera3d>)>,
+    mut players: Query<(&mut Transform, &mut Velocity, &Children), (With<Player>, Without<Camera3d>)>,
     mut cameras: Query<(&mut Transform, &mut EulerAttitude), With<Camera3d>>,
     windows: Query<&Window, &PrimaryWindow>,
     mut mouse_motion_events: EventReader<MouseMotion>,
@@ -90,7 +92,7 @@ fn player_move(
 ) {
     let window = windows.get_single().unwrap();
     let camera_sensitivity = Vec2::new(0.001, 0.001);
-    for (mut transform, children) in players.iter_mut() {
+    for (mut transform, mut velocity, children) in players.iter_mut() {
         // rotation
         for event in mouse_motion_events.iter() {
             transform.rotate_y(camera_sensitivity.x * event.delta.x / window.width());
@@ -105,20 +107,22 @@ fn player_move(
         }
 
         // translate
-        let movement_speed = 0.1;
+        let movement_speed = 2.0;
         let z = transform.local_z();
         let x = transform.local_x();
+        let mut linvel = Vec3::ZERO;
         if keyboard_input.pressed(KeyCode::W) {
-            transform.translation -= z * movement_speed;
+            linvel -= z * movement_speed;
         }
         if keyboard_input.pressed(KeyCode::S) {
-            transform.translation += z * movement_speed;
+            linvel += z * movement_speed;
         }
         if keyboard_input.pressed(KeyCode::A) {
-            transform.translation -= x * movement_speed;
+            linvel -= x * movement_speed;
         }
         if keyboard_input.pressed(KeyCode::D) {
-            transform.translation += x * movement_speed;
+            linvel += x * movement_speed;
         }
+        velocity.linvel = linvel;
     }
 }
