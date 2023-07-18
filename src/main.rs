@@ -36,67 +36,60 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(50.0).into()),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..default()
-    }).insert(
-        Collider::cuboid(50.0, 0.001, 50.0)
-    );
-    // cube
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        ..default()
-    }).insert(
-        RigidBody::Dynamic
-    ).insert(
-        Collider::cuboid(0.5, 0.5, 0.5)
-    ).insert(
-        Restitution::coefficient(0.1)
-    );
-    // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1500.0,
-            shadows_enabled: true,
+    commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(shape::Plane::from_size(50.0).into()),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..default()
-        },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
-    });
+        })
+        .insert(Collider::cuboid(50.0, 0.001, 50.0));
+        // cube
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            transform: Transform::from_xyz(0.0, 0.5, 0.0),
+            ..default()
+        })
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::cuboid(0.5, 0.5, 0.5))
+        .insert(Restitution::coefficient(0.1));
+    // light
+    commands
+        .spawn(PointLightBundle {
+            point_light: PointLight {
+                intensity: 1500.0,
+                shadows_enabled: true,
+                ..default()
+            },
+            transform: Transform::from_xyz(4.0, 8.0, 4.0),
+            ..default()
+        });
     // camera
-    let camera = commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
-        ..default()
-    }).insert(EulerAttitude {
-        0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }
-    }).insert(ScreenSpaceAmbientOcclusionBundle {
-        settings: ScreenSpaceAmbientOcclusionSettings {
-            quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
-        },
-        ..default()
-    }).id();
+    let camera = commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_xyz(0.0, 2.5, 0.0).looking_at(Vec3::new(2.0, 0.0, -5.0), Vec3::Y),
+            ..default()
+        })
+        .insert(EulerAttitude {0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }})
+        .insert(ScreenSpaceAmbientOcclusionBundle {
+            settings: ScreenSpaceAmbientOcclusionSettings {
+                quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
+            },
+            ..default()
+        })
+        .id();
     // player
-    commands.spawn(
-        Player
-    ).insert(
-        TransformBundle {
+    commands
+        .spawn(Player)
+        .insert(TransformBundle {
             local: Transform::from_xyz(-2.0, 0.0, 5.0),
             ..default()
-        }
-    ).insert(
-        Velocity::default()
-    ).insert(
-        RigidBody::Dynamic
-    ).insert(
-        LockedAxes::ROTATION_LOCKED
-    ).insert(
-        Collider::capsule_y(1.5, 0.3)
-    ).add_child(
-        camera
-    );
+        })
+        .insert(Velocity::default())
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(Collider::capsule_y(1.5, 0.3))
+        .add_child(camera);
 }
 
 fn player_move(
