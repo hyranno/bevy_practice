@@ -5,13 +5,14 @@ use bevy::{
         ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionQualityLevel,
         ScreenSpaceAmbientOcclusionSettings,
     },
+    core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
     prelude::*,
 };
 use bevy_rapier3d::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins((DefaultPlugins, TemporalAntiAliasPlugin))
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .insert_resource(Msaa::Off)
         .insert_resource(AmbientLight {
@@ -77,6 +78,7 @@ fn setup(
             },
             ..default()
         })
+        .insert(TemporalAntiAliasBundle::default())
         .id();
     // player
     commands
