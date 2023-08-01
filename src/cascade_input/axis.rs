@@ -1,5 +1,5 @@
 
-use bevy::prelude::*;
+use bevy::{prelude::*, input::mouse::MouseMotion};
 
 use crate::util::ComponentWrapper;
 
@@ -37,3 +37,22 @@ pub fn update_four_button_axis (
     }
 }
 
+
+#[derive(Component)]
+pub struct MappedMouse {
+    pub sensitivity: Vec2,
+}
+
+pub fn update_mouse_mapped_sticks(
+    mut sticks: Query<(&mut StickInput, &MappedMouse)>,
+    mut mouse_motion_events: EventReader<MouseMotion>,
+) {
+    let delta = mouse_motion_events.iter().map(|e| e.delta).reduce(|v1, v2| v1 + v2).unwrap_or_default();
+    for (mut stick, &MappedMouse {sensitivity}) in sticks.iter_mut() {
+        let value = delta * sensitivity;
+        // check real change for component change detection
+        if **stick != value {
+            **stick = value;
+        }
+    }
+}

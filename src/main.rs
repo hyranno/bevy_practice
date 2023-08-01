@@ -1,6 +1,4 @@
 use bevy::{
-    input::mouse::MouseMotion,
-    window::{Window, PrimaryWindow},
     pbr::{
         ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionQualityLevel,
         ScreenSpaceAmbientOcclusionSettings,
@@ -11,7 +9,7 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 use cascade_input::{
     button_like::{MappedKey, update_key_mapped_buttons, ButtonInput},
-    axis::{update_four_button_axis, StickInput, StickButtons},
+    axis::{update_four_button_axis, StickInput, StickButtons, MappedMouse, update_mouse_mapped_sticks},
 };
 
 mod util;
@@ -25,6 +23,7 @@ fn main() {
         .add_systems(Startup, setup)
         .configure_set(Update, CascadingInputSet::KeyMappedButtons.in_set(CascadingInputSet::Set))
         .add_systems(Update,update_key_mapped_buttons.in_set(CascadingInputSet::Set))
+        .add_systems(Update,update_mouse_mapped_sticks.in_set(CascadingInputSet::Set))
         .add_systems(Update,
             (
                 update_four_button_axis,
@@ -49,10 +48,12 @@ enum CascadingInputSet {
 #[derive(Component)]
 struct PlayerInput {
     pub locomotion_stick: Entity,
+    pub rotation_stick: Entity,
 }
 impl PlayerInput {
     pub fn new_with_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> Self {
         let mut locomotion_stick = None;
+        let mut rotation_stick = None;
         commands.with_children(|builder| {
             let negative_x = builder.spawn((
                 ButtonInput::new(false),
@@ -79,9 +80,16 @@ impl PlayerInput {
                     positive_y: positive_y,
                 }
             )).id());
+            rotation_stick = Some(builder.spawn((
+                StickInput::new(Vec2::default()),
+                MappedMouse {
+                    sensitivity: Vec2::new(0.0008, 0.0008),
+                }
+            )).id());
         });
         Self {
             locomotion_stick: locomotion_stick.unwrap(),
+            rotation_stick: rotation_stick.unwrap(),
         }
     }
 }
@@ -166,25 +174,20 @@ fn player_move(
     mut players: Query<(&mut Transform, &mut Velocity, &PlayerInput, &Children), With<Player>>,
     mut cameras: Query<(&mut Transform, &mut EulerAttitude), (With<Camera3d>, With<Parent>, Without<Player>)>,
     stick_inputs: Query<&StickInput>,
-    windows: Query<&Window, &PrimaryWindow>,
-    mut mouse_motion_events: EventReader<MouseMotion>,
 ) {
-    let window = windows.get_single().unwrap();
-    let camera_sensitivity = -Vec2::new(1.0, 1.0);
     for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
         // rotation
-        for event in mouse_motion_events.iter() {
-            transform.rotate_y(camera_sensitivity.x * event.delta.x / window.width());
+        if let Ok(stick) = stick_inputs.get(inputs.rotation_stick) {
+            let camera_sensitivity = Vec2::new(1.0, 1.0);
+            transform.rotate_y(-camera_sensitivity.x * stick.x);
             for &child in children {
-                if let Ok((mut camera_transform, mut camera_attitude)) = cameras.get_mut(child) {
-                    camera_attitude.0.x = (
-                        camera_attitude.0.x + camera_sensitivity.y * event.delta.y / window.height()
-                    ).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
-                    camera_transform.rotation = Quat::from_euler(EulerRot::YXZ, camera_attitude.0.y, camera_attitude.0.x, camera_attitude.0.z);
-                }
+                let Ok((mut camera_transform, mut camera_attitude)) = cameras.get_mut(child) else {continue;};
+                camera_attitude.0.x = (
+                    camera_attitude.0.x - camera_sensitivity.y * stick.y
+                ).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
+                camera_transform.rotation = Quat::from_euler(EulerRot::YXZ, camera_attitude.0.y, camera_attitude.0.x, camera_attitude.0.z);
             }
         }
-
         // translate
         if let Ok(stick) = stick_inputs.get(inputs.locomotion_stick) {
             let movement_speed = 2.0;
