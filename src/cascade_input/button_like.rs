@@ -1,7 +1,4 @@
-use std::{
-    ops::{Deref, DerefMut},
-    marker::PhantomData
-};
+use std::ops::{Deref, DerefMut};
 
 use bevy::{
     prelude::*,
@@ -45,6 +42,10 @@ impl<T: ButtonLikeMut, L> ButtonLikeMut for ComponentWrapper<T, L>
 }
 
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct ButtonLabel;
+pub type ButtonInput = ComponentWrapper<bool, ButtonLabel>;
+
 impl ButtonLike for bool {
     fn is(&self, state: ButtonState) -> bool {
         *self == (state == ButtonState::Pressed)
@@ -80,25 +81,21 @@ where
 
 
 #[derive(Component)]
-pub struct MappedKey<Button: Component + ButtonLikeMut> {
+pub struct MappedKey {
     pub key_code: KeyCode,
-    _phantom: PhantomData<Button>,
 }
-impl<B: Component + ButtonLikeMut> MappedKey<B> {
+impl MappedKey {
     pub fn new(key_code: KeyCode) -> Self {
         Self {
             key_code: key_code,
-            _phantom: PhantomData,
         }
     }
 }
 
-pub fn update_key_mapped_buttons<Button> (
-    mut buttons: Query<(&mut Button, &MappedKey<Button>)>,
+pub fn update_key_mapped_buttons (
+    mut buttons: Query<(&mut ButtonInput, &MappedKey)>,
     mut keyboard_input_events: EventReader<KeyboardInput>,
-)
-    where Button: Component + ButtonLikeMut
-{
+) {
     for event in keyboard_input_events.iter() {
         let Some(key_code) = event.key_code else {continue;};
         for (mut button, mapped_key) in buttons.iter_mut() {

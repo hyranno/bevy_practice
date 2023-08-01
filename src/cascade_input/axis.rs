@@ -1,34 +1,38 @@
-use std::ops::DerefMut;
 
 use bevy::prelude::*;
 
-use super::button_like::ButtonLike;
+use crate::util::ComponentWrapper;
 
+use super::button_like::{ButtonLike, ButtonInput};
 
-pub fn update_four_button_axis <Axis, NegativeX, PositiveX, NegativeY, PositiveY> (
-    mut query: Query<
-        (
-            &mut Axis,
-            &NegativeX, &PositiveX,
-            &NegativeY, &PositiveY,
-        ),
-        Or<(Changed<NegativeX>, Changed<PositiveX>, Changed<NegativeY>, Changed<PositiveY>)>
-    >,
-) where
-    Axis: Component + DerefMut<Target = Vec2>,
-    NegativeX: Component + ButtonLike,
-    PositiveX: Component + ButtonLike,
-    NegativeY: Component + ButtonLike,
-    PositiveY: Component + ButtonLike,
-{
-    for (mut axis, negative_x, positive_x, negative_y, positive_y) in query.iter_mut() {
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct StickLabel;
+pub type StickInput = ComponentWrapper<Vec2, StickLabel>;
+
+#[derive(Component)]
+pub struct StickButtons {
+    pub negative_x: Entity,
+    pub positive_x: Entity,
+    pub negative_y: Entity,
+    pub positive_y: Entity,
+}
+
+pub fn update_four_button_axis (
+    mut sticks: Query<(&mut StickInput, &StickButtons)>,
+    buttons: Query<&ButtonInput>,
+) {
+    for (mut stick, src) in sticks.iter_mut() {
+        let Ok(negative_x) = buttons.get(src.negative_x) else {continue;};
+        let Ok(positive_x) = buttons.get(src.positive_x) else {continue;};
+        let Ok(negative_y) = buttons.get(src.negative_y) else {continue;};
+        let Ok(positive_y) = buttons.get(src.positive_y) else {continue;};
         let value = Vec2::new(
             if negative_x.is_pressed() {-1.0} else {0.0} + if positive_x.is_pressed() {1.0} else {0.0},
             if negative_y.is_pressed() {-1.0} else {0.0} + if positive_y.is_pressed() {1.0} else {0.0},
         );
         // check real change for component change detection
-        if **axis != value {
-            **axis = value;
+        if **stick != value {
+            **stick = value;
         }
     }
 }

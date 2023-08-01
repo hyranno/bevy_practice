@@ -6,13 +6,12 @@ use bevy::{
         ScreenSpaceAmbientOcclusionSettings,
     },
     core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
-    prelude::*,
+    prelude::*, ecs::system::EntityCommands,
 };
 use bevy_rapier3d::prelude::*;
-use util::ComponentWrapper;
 use cascade_input::{
-    button_like::{MappedKey, update_key_mapped_buttons},
-    axis::update_four_button_axis,
+    button_like::{MappedKey, update_key_mapped_buttons, ButtonInput},
+    axis::{update_four_button_axis, StickInput, StickButtons},
 };
 
 mod util;
@@ -25,19 +24,12 @@ fn main() {
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
         .configure_set(Update, CascadingInputSet::KeyMappedButtons.in_set(CascadingInputSet::Set))
+        .add_systems(Update,update_key_mapped_buttons.in_set(CascadingInputSet::Set))
         .add_systems(Update,
             (
-                update_key_mapped_buttons::<NegativeX>,
-                update_key_mapped_buttons::<PositiveX>,
-                update_key_mapped_buttons::<NegativeY>,
-                update_key_mapped_buttons::<PositiveY>,
-            ).in_set(CascadingInputSet::KeyMappedButtons)
-        )
-        .add_systems(Update,
-            (
-                update_four_button_axis::<LocomotionAxis2D, NegativeX, PositiveX, NegativeY, PositiveY>,
+                update_four_button_axis,
             ).in_set(CascadingInputSet::Set)
-            .after(CascadingInputSet::KeyMappedButtons)
+            .after(update_key_mapped_buttons)
         )
         .add_systems(Update, player_move.after(CascadingInputSet::Set))
         .run();
@@ -54,48 +46,46 @@ enum CascadingInputSet {
     Set,
     KeyMappedButtons,
 }
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct LocomotionButtonNegativeX;
-type NegativeX = ComponentWrapper<bool, LocomotionButtonNegativeX>;
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct LocomotionButtonPositiveX;
-type PositiveX = ComponentWrapper<bool, LocomotionButtonPositiveX>;
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct LocomotionButtonNegativeY;
-type NegativeY = ComponentWrapper<bool, LocomotionButtonNegativeY>;
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct LocomotionButtonPositiveY;
-type PositiveY = ComponentWrapper<bool, LocomotionButtonPositiveY>;
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct LocomotionAxis2DLabel;
-type LocomotionAxis2D = ComponentWrapper<Vec2, LocomotionAxis2DLabel>;
-#[derive(Bundle)]
-struct PlayerInputBundle {
-    button_negative_x: NegativeX,
-    button_positive_x: PositiveX,
-    button_negative_y: NegativeY,
-    button_positive_y: PositiveY,
-    key_negative_x: MappedKey<NegativeX>,  // MappedKey<TypeOf(button_negative_x)>
-    key_positive_x: MappedKey<PositiveX>,
-    key_negative_y: MappedKey<NegativeY>,
-    key_positive_y: MappedKey<PositiveY>,
-    stick_locomotion: LocomotionAxis2D,
+#[derive(Component)]
+struct PlayerInput {
+    pub locomotion_stick: Entity,
 }
-impl Default for PlayerInputBundle {
-    fn default() -> Self {
+impl PlayerInput {
+    pub fn new_with_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> Self {
+        let mut locomotion_stick = None;
+        commands.with_children(|builder| {
+            let negative_x = builder.spawn((
+                ButtonInput::new(false),
+                MappedKey::new(KeyCode::A),
+            )).id();
+            let positive_x = builder.spawn((
+                ButtonInput::new(false),
+                MappedKey::new(KeyCode::D),
+            )).id();
+            let negative_y = builder.spawn((
+                ButtonInput::new(false),
+                MappedKey::new(KeyCode::S),
+            )).id();
+            let positive_y = builder.spawn((
+                ButtonInput::new(false),
+                MappedKey::new(KeyCode::W),
+            )).id();
+            locomotion_stick = Some(builder.spawn((
+                StickInput::new(Vec2::default()),
+                StickButtons {
+                    negative_x: negative_x,
+                    positive_x: positive_x,
+                    negative_y: negative_y,
+                    positive_y: positive_y,
+                }
+            )).id());
+        });
         Self {
-            button_negative_x: ComponentWrapper::new(false),
-            button_positive_x: ComponentWrapper::new(false),
-            button_negative_y: ComponentWrapper::new(false),
-            button_positive_y: ComponentWrapper::new(false),
-            key_negative_x: MappedKey::new(KeyCode::A),
-            key_positive_x: MappedKey::new(KeyCode::D),
-            key_negative_y: MappedKey::new(KeyCode::S),
-            key_positive_y: MappedKey::new(KeyCode::W),
-            stick_locomotion: ComponentWrapper::new(Vec2::default()),
+            locomotion_stick: locomotion_stick.unwrap(),
         }
     }
 }
+
 
 
 
@@ -156,30 +146,32 @@ fn setup(
         .insert(TemporalAntiAliasBundle::default())
         .id();
     // player
-    commands
-        .spawn(Player)
+    let mut player_builder = commands.spawn(Player);
+    player_builder
         .insert(TransformBundle {
             local: Transform::from_xyz(-2.0, 0.0, 5.0),
             ..default()
         })
-        .insert(PlayerInputBundle::default())
         .insert(Velocity::default())
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Collider::capsule_y(1.5, 0.3))
         .add_child(camera);
+    //controller
+    let controller = PlayerInput::new_with_inputs(&mut player_builder);
+    player_builder.insert(controller);
 }
 
 fn player_move(
-    mut players: Query<(Entity, &mut Transform, &mut Velocity, &Children), (With<Player>, Without<Camera3d>)>,
-    mut cameras: Query<(&mut Transform, &mut EulerAttitude), With<Camera3d>>,
-    controller: Query<&LocomotionAxis2D>,
+    mut players: Query<(&mut Transform, &mut Velocity, &PlayerInput, &Children), With<Player>>,
+    mut cameras: Query<(&mut Transform, &mut EulerAttitude), (With<Camera3d>, With<Parent>, Without<Player>)>,
+    stick_inputs: Query<&StickInput>,
     windows: Query<&Window, &PrimaryWindow>,
     mut mouse_motion_events: EventReader<MouseMotion>,
 ) {
     let window = windows.get_single().unwrap();
     let camera_sensitivity = -Vec2::new(1.0, 1.0);
-    for (entity, mut transform, mut velocity, children) in players.iter_mut() {
+    for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
         // rotation
         for event in mouse_motion_events.iter() {
             transform.rotate_y(camera_sensitivity.x * event.delta.x / window.width());
@@ -193,15 +185,16 @@ fn player_move(
             }
         }
 
-        if let Ok(locomotion_2d) = controller.get(entity) {
-            // translate
+        // translate
+        if let Ok(stick) = stick_inputs.get(inputs.locomotion_stick) {
             let movement_speed = 2.0;
             let z = transform.local_z();
             let x = transform.local_x();
             let mut linvel = Vec3::ZERO;
-            linvel -= z * movement_speed * locomotion_2d.y;
-            linvel += x * movement_speed * locomotion_2d.x;
+            linvel -= z * movement_speed * stick.y;
+            linvel += x * movement_speed * stick.x;
             velocity.linvel = linvel;
         }
+
     }
 }
