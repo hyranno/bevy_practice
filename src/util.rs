@@ -37,10 +37,3 @@ impl<T, L> DerefMut for ComponentWrapper<T, L>
     }
 }
 
-pub trait SimpleDelegate {
-    type Base;
-    fn base(&self) -> &Self::Base;
-}
-pub trait SimpleDelegateMut: SimpleDelegate {
-    fn base_mut(&mut self) -> &mut Self::Base;
-}
