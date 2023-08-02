@@ -56,3 +56,33 @@ pub fn update_mouse_mapped_sticks(
         }
     }
 }
+
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct MaxLengthLabel;
+pub type MaxLength = ComponentWrapper<f32, MaxLengthLabel>;
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct DeadZoneLabel;
+pub type DeadZone = ComponentWrapper<f32, DeadZoneLabel>;
+
+pub fn clamp_stick (
+    mut sticks: Query<
+        (&mut StickInput, Option<&MaxLength>, Option<&DeadZone>),
+        (Or<(With<MaxLength>, With<DeadZone>)>, Changed<StickInput>)
+    >,
+) {
+    for (mut stick, max_len, deadzone) in sticks.iter_mut() {
+        let len = stick.length();
+        if let Some(max_len) = max_len {
+            if **max_len < len {
+                **stick *= **max_len / len;
+            }
+        }
+        if let Some(deadzone) = deadzone {
+            if len < **deadzone {
+                **stick = Vec2::ZERO;
+            }
+        }
+    }
+}

@@ -9,7 +9,7 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 use cascade_input::{
     button_like::{MappedKey, update_key_mapped_buttons, ButtonInput},
-    axis::{update_four_button_axis, StickInput, StickButtons, MappedMouse, update_mouse_mapped_sticks},
+    axis::{update_four_button_axis, StickInput, StickButtons, MappedMouse, update_mouse_mapped_sticks, MaxLength, DeadZone, clamp_stick},
 };
 
 mod util;
@@ -29,6 +29,11 @@ fn main() {
                 update_four_button_axis,
             ).in_set(CascadingInputSet::Set)
             .after(update_key_mapped_buttons)
+        )
+        .add_systems(Update,
+            clamp_stick
+            .in_set(CascadingInputSet::Set)
+            .after(update_four_button_axis)
         )
         .add_systems(Update, player_move.after(CascadingInputSet::Set))
         .run();
@@ -79,7 +84,10 @@ impl PlayerInput {
                     negative_y: negative_y,
                     positive_y: positive_y,
                 }
-            )).id());
+            ))
+            .insert(MaxLength::new(1.0))
+            .insert(DeadZone::new(0.0))
+            .id());
             rotation_stick = Some(builder.spawn((
                 StickInput::new(Vec2::default()),
                 MappedMouse {
