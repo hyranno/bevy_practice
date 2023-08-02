@@ -42,7 +42,7 @@ impl<T: ButtonLikeMut, L> ButtonLikeMut for ComponentWrapper<T, L>
 }
 
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct ButtonLabel;
 pub type ButtonInput = ComponentWrapper<bool, ButtonLabel>;
 

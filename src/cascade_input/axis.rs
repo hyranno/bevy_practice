@@ -5,7 +5,7 @@ use crate::util::ComponentWrapper;
 
 use super::button_like::{ButtonLike, ButtonInput};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct StickLabel;
 pub type StickInput = ComponentWrapper<Vec2, StickLabel>;
 
@@ -58,7 +58,7 @@ pub fn update_mouse_mapped_sticks(
 }
 
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct MaxLengthLabel;
 pub type MaxLength = ComponentWrapper<f32, MaxLengthLabel>;
 

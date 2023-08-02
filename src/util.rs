@@ -4,7 +4,7 @@ use std::{
     marker::PhantomData,
 };
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ComponentWrapper<T, ComponentLabel>
     where ComponentLabel: Clone + Eq + Send + Sync + 'static
 {
