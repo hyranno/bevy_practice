@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use bevy::{
     prelude::*,
     input::{keyboard::KeyboardInput, ButtonState},
@@ -66,3 +68,33 @@ pub fn update_key_mapped_buttons (
 
 
 
+#[derive(Component)]
+pub struct Toggle<SystemLabel> where
+    SystemLabel: Clone + Eq + Send + Sync + 'static
+{
+    pub source: Entity,
+    _phantom: PhantomData<SystemLabel>
+}
+impl<S> Toggle<S>
+    where S: Clone + Eq + Send + Sync + 'static
+{
+    pub fn new(source: Entity) -> Self {
+        Self {
+            source: source,
+            _phantom: PhantomData,
+        }
+    }
+}
+pub fn update_toggle_buttons<SystemLabel> (
+    mut buttons: Query<(&mut ButtonInput, &Toggle<SystemLabel>)>,
+    source: Query<&ButtonInput, (Changed<ButtonInput>, Without<Toggle<SystemLabel>>)>,
+) where
+    SystemLabel: Clone + Eq + Send + Sync + 'static
+{
+    for (mut button, toggle) in buttons.iter_mut() {
+        let Ok(source) = source.get(toggle.source) else {continue;};
+        if **source {
+            **button = !**button;
+        }
+    }
+}

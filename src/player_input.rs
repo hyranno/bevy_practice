@@ -3,7 +3,7 @@ use bevy::{
 };
 use crate::cascade_input::{
     CascadeInputSet,
-    button_like::{ButtonInput, MappedKey, update_key_mapped_buttons},
+    button_like::{ButtonInput, MappedKey, update_key_mapped_buttons, Toggle, update_toggle_buttons},
     axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick},
 };
 
@@ -11,17 +11,29 @@ use crate::cascade_input::{
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update,
-            (
-                update_four_button_axis,
-            ).in_set(CascadeInputSet::Flush)
-            .after(update_key_mapped_buttons)
-        )
-        .add_systems(Update,
-            clamp_stick
-            .in_set(CascadeInputSet::Flush)
-            .after(update_four_button_axis)
-        );
+        app
+            .add_systems(Update,
+                (
+                    update_four_button_axis,
+                ).in_set(CascadeInputSet::Flush)
+                .after(update_key_mapped_buttons)
+            )
+            .add_systems(Update,
+                clamp_stick
+                .in_set(CascadeInputSet::Flush)
+                .after(update_four_button_axis)
+            )
+            .add_systems(Update,
+                update_toggle_buttons::<WalkToggleLabel>
+                .in_set(CascadeInputSet::Flush)
+                .after(update_four_button_axis)
+            )
+            .add_systems(Update,
+                update_walking
+                .in_set(CascadeInputSet::Flush)
+                .after(update_toggle_buttons::<WalkToggleLabel>)
+            )
+        ;
     }
 }
 
@@ -53,6 +65,14 @@ impl PlayerInput {
                 ButtonInput::new(false),
                 MappedKey::new(KeyCode::W),
             )).id();
+            let walk_key = builder.spawn((
+                ButtonInput::new(false),
+                MappedKey::new(KeyCode::C),
+            )).id();
+            let walking = builder.spawn((
+                ButtonInput::new(false),
+                Toggle::<WalkToggleLabel>::new(walk_key),
+            )).id();
             locomotion_stick = Some(builder.spawn((
                 StickInput::new(Vec2::default()),
                 StickButtons {
@@ -60,11 +80,14 @@ impl PlayerInput {
                     positive_x: positive_x,
                     negative_y: negative_y,
                     positive_y: positive_y,
-                }
-            ))
-            .insert(MaxLength::new(1.0))
-            .insert(DeadZone::new(0.0))
-            .id());
+                },
+                MaxLength::new(1.0),
+                DeadZone::new(0.0),
+                WalkMode {
+                    walking: walking,
+                    amp: 0.5
+                },
+            )).id());
 
             rotation_stick = Some(builder.spawn((
                 StickInput::new(Vec2::default()),
@@ -77,6 +100,29 @@ impl PlayerInput {
         Self {
             locomotion_stick: locomotion_stick.unwrap(),
             rotation_stick: rotation_stick.unwrap(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+struct WalkToggleLabel;
+
+#[derive(Component)]
+struct WalkMode {
+    walking: Entity,
+    amp: f32,
+}
+fn update_walking(
+    mut sticks: Query<(&mut StickInput, &WalkMode)>,
+    buttons: Query<&ButtonInput>,
+) {
+    for (mut stick, walk_mode) in sticks.iter_mut() {
+        let Ok(walking) = buttons.get(walk_mode.walking) else {continue;};
+        if !**walking {continue;};
+        let value = **stick * walk_mode.amp;
+        // check real change for component change detection
+        if **stick != value {
+            **stick = value;
         }
     }
 }
