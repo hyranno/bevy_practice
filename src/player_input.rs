@@ -4,7 +4,7 @@ use bevy::{
 use crate::cascade_input::{
     CascadeInputSet,
     button_like::{ButtonInput, MappedKey, update_key_mapped_buttons, Toggle, update_toggle_buttons},
-    axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick},
+    axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput},
 };
 
 
@@ -33,6 +33,11 @@ impl Plugin for PlayerInputPlugin {
                 .in_set(CascadeInputSet::Flush)
                 .after(update_toggle_buttons::<WalkToggleLabel>)
             )
+            .add_systems(Update,
+                update_locomotion_from_stick
+                .in_set(CascadeInputSet::Flush)
+                .after(update_walking)
+            )
         ;
     }
 }
@@ -40,12 +45,12 @@ impl Plugin for PlayerInputPlugin {
 
 #[derive(Component)]
 pub struct PlayerInput {
-    pub locomotion_stick: Entity,
+    pub locomotion: Entity,
     pub rotation_stick: Entity,
 }
 impl PlayerInput {
     pub fn new_with_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> Self {
-        let mut locomotion_stick = None;
+        let mut locomotion = None;
         let mut rotation_stick = None;
 
         commands.with_children(|builder| {
@@ -73,7 +78,7 @@ impl PlayerInput {
                 ButtonInput::new(false),
                 Toggle::<WalkToggleLabel>::new(walk_key),
             )).id();
-            locomotion_stick = Some(builder.spawn((
+            let locomotion_stick = builder.spawn((
                 StickInput::new(Vec2::default()),
                 StickButtons {
                     negative_x: negative_x,
@@ -87,6 +92,12 @@ impl PlayerInput {
                     walking: walking,
                     amp: 0.5
                 },
+            )).id();
+            locomotion = Some(builder.spawn((
+                PositionalInput::new(Vec3::default()),
+                MappedStick {
+                    stick: locomotion_stick,
+                }
             )).id());
 
             rotation_stick = Some(builder.spawn((
@@ -98,7 +109,7 @@ impl PlayerInput {
         });
 
         Self {
-            locomotion_stick: locomotion_stick.unwrap(),
+            locomotion: locomotion.unwrap(),
             rotation_stick: rotation_stick.unwrap(),
         }
     }
@@ -125,4 +136,27 @@ fn update_walking(
             **stick = value;
         }
     }
+}
+
+
+#[derive(Component)]
+struct  MappedStick {
+    stick: Entity,
+}
+
+fn update_locomotion_from_stick(
+    mut locomotions: Query<(&mut PositionalInput, &MappedStick)>,
+    sticks: Query<&StickInput>,
+) {
+    for (mut locomotion, mapped_stick) in locomotions.iter_mut() {
+        let Ok(stick) = sticks.get(mapped_stick.stick) else {continue;};
+        let value = Vec3::new(stick.x, 0.0, -stick.y);
+        // check real change for component change detection
+        if **locomotion != value {
+            **locomotion = value;
+        }
+    }
+}
+fn update_rotation_from_stick() {
+    // TODO
 }

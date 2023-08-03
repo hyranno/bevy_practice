@@ -9,7 +9,7 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 use cascade_input::{
     CascadeInputPlugin, CascadeInputSet,
-    axis::StickInput,
+    axis::{StickInput, PositionalInput},
 };
 use player_input::{PlayerInput, PlayerInputPlugin};
 
@@ -110,6 +110,7 @@ fn setup(
 fn player_move(
     mut players: Query<(&mut Transform, &mut Velocity, &PlayerInput, &Children), With<Player>>,
     mut cameras: Query<(&mut Transform, &mut EulerAttitude), (With<Camera3d>, With<Parent>, Without<Player>)>,
+    positional_inputs: Query<&PositionalInput>,
     stick_inputs: Query<&StickInput>,
 ) {
     for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
@@ -126,13 +127,9 @@ fn player_move(
             }
         }
         // translate
-        if let Ok(stick) = stick_inputs.get(inputs.locomotion_stick) {
+        if let Ok(locomotion) = positional_inputs.get(inputs.locomotion) {
             let movement_speed = 2.0;
-            let z = transform.local_z();
-            let x = transform.local_x();
-            let mut linvel = Vec3::ZERO;
-            linvel -= z * movement_speed * stick.y;
-            linvel += x * movement_speed * stick.x;
+            let linvel = movement_speed * transform.rotation.inverse().mul_vec3(**locomotion);
             velocity.linvel = linvel;
         }
 

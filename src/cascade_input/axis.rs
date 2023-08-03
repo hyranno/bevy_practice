@@ -9,6 +9,18 @@ use super::button_like::{ButtonLike, ButtonInput};
 pub struct StickLabel;
 pub type StickInput = ComponentWrapper<Vec2, StickLabel>;
 
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct PositionalInputLabel;
+pub type PositionalInput = ComponentWrapper<Vec3, PositionalInputLabel>;
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct EulerAngleInputLabel;
+pub type EulerAngleInput = ComponentWrapper<Vec3, EulerAngleInputLabel>;
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct RotationalInputLabel;
+pub type RotationalInput = ComponentWrapper<Quat, RotationalInputLabel>;
+
 #[derive(Component)]
 pub struct StickButtons {
     pub negative_x: Entity,
