@@ -3,7 +3,7 @@ use bevy::{
 };
 use crate::cascade_input::{
     CascadeInputSet,
-    button_like::{ButtonInput, MappedKey, update_key_mapped_buttons, Toggle, update_toggle_buttons},
+    button_like::{ButtonInput, MappedKey, Toggle, update_toggle_buttons},
     axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
 };
 
@@ -18,7 +18,7 @@ impl Plugin for PlayerInputPlugin {
                 (
                     update_four_button_axis,
                 ).in_set(CascadeInputSet::Flush)
-                .after(update_key_mapped_buttons)
+                .after(CascadeInputSet::DeviceMappedInputs)
             )
             .add_systems(Update,
                 clamp_stick
@@ -28,7 +28,7 @@ impl Plugin for PlayerInputPlugin {
             .add_systems(Update,
                 update_toggle_buttons::<WalkToggleLabel>
                 .in_set(CascadeInputSet::Flush)
-                .after(update_four_button_axis)
+                .after(CascadeInputSet::DeviceMappedInputs)
             )
             .add_systems(Update,
                 update_walking
