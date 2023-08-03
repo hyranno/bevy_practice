@@ -1,4 +1,6 @@
 
+use std::marker::PhantomData;
+
 use bevy::{prelude::*, input::mouse::MouseMotion};
 
 use crate::util::ComponentWrapper;
@@ -98,3 +100,34 @@ pub fn clamp_stick (
         }
     }
 }
+
+
+#[derive(Component)]
+pub struct MappedEulerAngle<SystemLabel> where
+    SystemLabel: Clone + Eq + Send + Sync + 'static
+{
+    pub source: Entity,
+    _phantom: PhantomData<SystemLabel>,
+}
+impl<S> MappedEulerAngle<S> where 
+    S: Clone + Eq + Send + Sync + 'static
+{
+    pub fn new(source: Entity) -> Self {
+        Self {
+            source: source,
+            _phantom: PhantomData,
+        }
+    }
+}
+pub fn update_rotation_from_euler<SystemLabel> (
+    mut dests: Query<(&mut RotationalInput, &MappedEulerAngle<SystemLabel>)>,
+    source: Query<&EulerAngleInput, Changed<EulerAngleInput>>,
+) where
+    SystemLabel: Clone + Eq + Send + Sync + 'static
+{
+    for (mut rotation, mapping) in dests.iter_mut() {
+        let Ok(source) = source.get(mapping.source) else {continue;};
+        **rotation = Quat::from_euler(EulerRot::YXZ, source.y, source.x, source.z);
+    }
+}
+

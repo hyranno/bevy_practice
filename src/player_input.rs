@@ -4,9 +4,11 @@ use bevy::{
 use crate::cascade_input::{
     CascadeInputSet,
     button_like::{ButtonInput, MappedKey, update_key_mapped_buttons, Toggle, update_toggle_buttons},
-    axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput},
+    axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
 };
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct DummyLabel;
 
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
@@ -38,6 +40,16 @@ impl Plugin for PlayerInputPlugin {
                 .in_set(CascadeInputSet::Flush)
                 .after(update_walking)
             )
+            .add_systems(Update,
+                update_rotation_from_stick
+                .in_set(CascadeInputSet::Flush)
+                .after(CascadeInputSet::DeviceMappedInputs)
+            )
+            .add_systems(Update,
+                update_rotation_from_euler::<DummyLabel>
+                .in_set(CascadeInputSet::Flush)
+                .after(update_rotation_from_stick)
+            )
         ;
     }
 }
@@ -46,12 +58,14 @@ impl Plugin for PlayerInputPlugin {
 #[derive(Component)]
 pub struct PlayerInput {
     pub locomotion: Entity,
-    pub rotation_stick: Entity,
+    pub rotation: Entity,
+    pub camera_attitude: Entity,
 }
 impl PlayerInput {
     pub fn new_with_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> Self {
         let mut locomotion = None;
-        let mut rotation_stick = None;
+        let mut rotation = None;
+        let mut camera_attitude = None;
 
         commands.with_children(|builder| {
             let negative_x = builder.spawn((
@@ -100,17 +114,37 @@ impl PlayerInput {
                 }
             )).id());
 
-            rotation_stick = Some(builder.spawn((
+            let rotation_euler = builder.spawn((
+                EulerAngleInput::new(Vec3::ZERO),
+            )).id();
+            let camera_attitude_euler = builder.spawn((
+                EulerAngleInput::new(Vec3::ZERO),
+            )).id();
+            builder.spawn(( // rotation_stick
                 StickInput::new(Vec2::default()),
                 MappedMouse {
                     sensitivity: Vec2::new(0.0008, 0.0008),
+                },
+                TargetRotation {
+                    sensitivity: Vec2::ONE,
+                    rotation: rotation_euler,
+                    camera_attitude: camera_attitude_euler,
                 }
+            ));
+            rotation = Some(builder.spawn((
+                RotationalInput::new(Quat::default()),
+                MappedEulerAngle::<DummyLabel>::new(rotation_euler),
+            )).id());
+            camera_attitude = Some(builder.spawn((
+                RotationalInput::new(Quat::default()),
+                MappedEulerAngle::<DummyLabel>::new(camera_attitude_euler),
             )).id());
         });
 
         Self {
             locomotion: locomotion.unwrap(),
-            rotation_stick: rotation_stick.unwrap(),
+            rotation: rotation.unwrap(),
+            camera_attitude: camera_attitude.unwrap(),
         }
     }
 }
@@ -143,7 +177,6 @@ fn update_walking(
 struct  MappedStick {
     stick: Entity,
 }
-
 fn update_locomotion_from_stick(
     mut locomotions: Query<(&mut PositionalInput, &MappedStick)>,
     sticks: Query<&StickInput>,
@@ -157,6 +190,23 @@ fn update_locomotion_from_stick(
         }
     }
 }
-fn update_rotation_from_stick() {
-    // TODO
+
+#[derive(Component)]
+struct  TargetRotation {    // attach this to stick
+    sensitivity: Vec2,
+    rotation: Entity,
+    camera_attitude: Entity,
+}
+fn update_rotation_from_stick(
+    mut angles: Query<&mut EulerAngleInput>,
+    sticks: Query<(&StickInput, &TargetRotation)>,
+) {
+    for (stick, target) in sticks.iter() {
+        let Ok(mut rotation) = angles.get_mut(target.rotation) else {continue;};
+        **rotation = Vec3::new(0.0, -target.sensitivity.x * stick.x, 0.0);
+        let Ok(mut camera_attitude) = angles.get_mut(target.camera_attitude) else {continue;};
+        camera_attitude.x = (
+            camera_attitude.x - target.sensitivity.y * stick.y
+        ).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
+    }
 }

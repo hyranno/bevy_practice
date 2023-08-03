@@ -9,7 +9,7 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 use cascade_input::{
     CascadeInputPlugin, CascadeInputSet,
-    axis::{StickInput, PositionalInput},
+    axis::{PositionalInput, RotationalInput},
 };
 use player_input::{PlayerInput, PlayerInputPlugin};
 
@@ -29,9 +29,6 @@ fn main() {
 
 #[derive(Component)]
 struct Player;
-
-#[derive(Component)]
-struct EulerAttitude(Vec3);
 
 
 /// set up a simple 3D scene
@@ -81,7 +78,6 @@ fn setup(
             transform: Transform::from_xyz(0.0, 2.5, 0.0),
             ..default()
         })
-        .insert(EulerAttitude {0: Vec3 { x: 0.0, y: 0.0, z: 0.0 }})
         .insert(ScreenSpaceAmbientOcclusionBundle {
             settings: ScreenSpaceAmbientOcclusionSettings {
                 quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
@@ -109,22 +105,20 @@ fn setup(
 
 fn player_move(
     mut players: Query<(&mut Transform, &mut Velocity, &PlayerInput, &Children), With<Player>>,
-    mut cameras: Query<(&mut Transform, &mut EulerAttitude), (With<Camera3d>, With<Parent>, Without<Player>)>,
+    mut cameras: Query<&mut Transform, (With<Camera3d>, With<Parent>, Without<Player>)>,
     positional_inputs: Query<&PositionalInput>,
-    stick_inputs: Query<&StickInput>,
+    rotational_inputs: Query<&RotationalInput>,
 ) {
     for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
         // rotation
-        if let Ok(stick) = stick_inputs.get(inputs.rotation_stick) {
-            let camera_sensitivity = Vec2::new(1.0, 1.0);
-            transform.rotate_y(-camera_sensitivity.x * stick.x);
-            for &child in children {
-                let Ok((mut camera_transform, mut camera_attitude)) = cameras.get_mut(child) else {continue;};
-                camera_attitude.0.x = (
-                    camera_attitude.0.x - camera_sensitivity.y * stick.y
-                ).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
-                camera_transform.rotation = Quat::from_euler(EulerRot::YXZ, camera_attitude.0.y, camera_attitude.0.x, camera_attitude.0.z);
-            }
+        if let Ok(rotation) = rotational_inputs.get(inputs.rotation) {
+            transform.rotate(**rotation);
+        }
+        // camera_rotation
+        for &child in children {
+            let Ok(mut camera_transform) = cameras.get_mut(child) else {continue;};
+            let Ok(camera_attitude) = rotational_inputs.get(inputs.camera_attitude) else {continue;};
+            camera_transform.rotation = **camera_attitude;
         }
         // translate
         if let Ok(locomotion) = positional_inputs.get(inputs.locomotion) {
