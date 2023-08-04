@@ -162,7 +162,10 @@ fn update_walking(
     buttons: Query<&ButtonInput>,
 ) {
     for (mut stick, walk_mode) in sticks.iter_mut() {
-        let Ok(walking) = buttons.get(walk_mode.walking) else {continue;};
+        let Ok(walking) = buttons.get(walk_mode.walking) else {
+            warn!("Entity not found");
+            continue;
+        };
         if !**walking {continue;};
         let value = **stick * walk_mode.amp;
         // check real change for component change detection
@@ -182,7 +185,10 @@ fn update_locomotion_from_stick(
     sticks: Query<&StickInput>,
 ) {
     for (mut locomotion, mapped_stick) in locomotions.iter_mut() {
-        let Ok(stick) = sticks.get(mapped_stick.stick) else {continue;};
+        let Ok(stick) = sticks.get(mapped_stick.stick) else {
+            warn!("Entity not found");
+            continue;
+        };
         let value = Vec3::new(stick.x, 0.0, -stick.y);
         // check real change for component change detection
         if **locomotion != value {
@@ -202,9 +208,15 @@ fn update_rotation_from_stick(
     sticks: Query<(&StickInput, &TargetRotation)>,
 ) {
     for (stick, target) in sticks.iter() {
-        let Ok(mut rotation) = angles.get_mut(target.rotation) else {continue;};
+        let Ok(mut rotation) = angles.get_mut(target.rotation) else {
+            warn!("Entity not found");
+            continue;
+        };
         **rotation = Vec3::new(0.0, -target.sensitivity.x * stick.x, 0.0);
-        let Ok(mut camera_attitude) = angles.get_mut(target.camera_attitude) else {continue;};
+        let Ok(mut camera_attitude) = angles.get_mut(target.camera_attitude) else {
+            warn!("Entity not found");
+            continue;
+        };
         camera_attitude.x = (
             camera_attitude.x - target.sensitivity.y * stick.y
         ).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);

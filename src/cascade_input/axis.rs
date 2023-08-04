@@ -36,10 +36,14 @@ pub fn update_four_button_axis (
     buttons: Query<&ButtonInput>,
 ) {
     for (mut stick, src) in sticks.iter_mut() {
-        let Ok(negative_x) = buttons.get(src.negative_x) else {continue;};
-        let Ok(positive_x) = buttons.get(src.positive_x) else {continue;};
-        let Ok(negative_y) = buttons.get(src.negative_y) else {continue;};
-        let Ok(positive_y) = buttons.get(src.positive_y) else {continue;};
+        let (
+            Ok(negative_x), Ok(positive_x), Ok(negative_y), Ok(positive_y)
+        ) = (
+            buttons.get(src.negative_x), buttons.get(src.positive_x), buttons.get(src.negative_y), buttons.get(src.positive_y),
+        ) else {
+            warn!("Buttons not found");
+            continue;
+        };
         let value = Vec2::new(
             if negative_x.is_pressed() {-1.0} else {0.0} + if positive_x.is_pressed() {1.0} else {0.0},
             if negative_y.is_pressed() {-1.0} else {0.0} + if positive_y.is_pressed() {1.0} else {0.0},
@@ -121,12 +125,15 @@ impl<S> MappedEulerAngle<S> where
 }
 pub fn update_rotation_from_euler<SystemLabel> (
     mut dests: Query<(&mut RotationalInput, &MappedEulerAngle<SystemLabel>)>,
-    source: Query<&EulerAngleInput, Changed<EulerAngleInput>>,
+    source: Query<&EulerAngleInput>,
 ) where
     SystemLabel: Clone + Eq + Send + Sync + 'static
 {
     for (mut rotation, mapping) in dests.iter_mut() {
-        let Ok(source) = source.get(mapping.source) else {continue;};
+        let Ok(source) = source.get(mapping.source) else {
+            warn!("Entity not found");
+            continue;
+        };
         **rotation = Quat::from_euler(EulerRot::YXZ, source.y, source.x, source.z);
     }
 }
