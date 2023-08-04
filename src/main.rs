@@ -97,6 +97,7 @@ fn setup(
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Collider::capsule_y(1.5, 0.3))
+        .insert(KinematicCharacterController {..default()})
         .add_child(camera);
     //controller
     let controller = PlayerInput::new_with_inputs(&mut player_builder);
