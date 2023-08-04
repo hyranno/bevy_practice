@@ -134,7 +134,11 @@ pub fn update_rotation_from_euler<SystemLabel> (
             warn!("Entity not found");
             continue;
         };
-        **rotation = Quat::from_euler(EulerRot::YXZ, source.y, source.x, source.z);
+        let value = Quat::from_euler(EulerRot::YXZ, source.y, source.x, source.z);
+        // avoid false change detection
+        if **rotation != value {
+            **rotation = value;
+        }
     }
 }
 

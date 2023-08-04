@@ -212,13 +212,19 @@ fn update_rotation_from_stick(
             warn!("Entity not found");
             continue;
         };
-        **rotation = Vec3::new(0.0, -target.sensitivity.x * stick.x, 0.0);
+        let rotation_value = Vec3::new(0.0, -target.sensitivity.x * stick.x, 0.0);
+        // avoid false change detection
+        if **rotation != rotation_value {
+            **rotation = rotation_value;
+        }
         let Ok(mut camera_attitude) = angles.get_mut(target.camera_attitude) else {
             warn!("Entity not found");
             continue;
         };
-        camera_attitude.x = (
-            camera_attitude.x - target.sensitivity.y * stick.y
-        ).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
+        let attitude_x = (camera_attitude.x - target.sensitivity.y * stick.y).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
+        // avoid false change detection
+        if camera_attitude.x != attitude_x {
+            camera_attitude.x = attitude_x;
+        }
     }
 }

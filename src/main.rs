@@ -112,19 +112,28 @@ fn player_move(
     for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
         // rotation
         if let Ok(rotation) = rotational_inputs.get(inputs.rotation) {
-            transform.rotate(**rotation);
+            // avoid false change detection
+            if **rotation != Quat::IDENTITY {
+                transform.rotate(**rotation);
+            }
         }
         // camera_rotation
         for &child in children {
             let Ok(mut camera_transform) = cameras.get_mut(child) else {continue;};
             let Ok(camera_attitude) = rotational_inputs.get(inputs.camera_attitude) else {continue;};
-            camera_transform.rotation = **camera_attitude;
+            // avoid false change detection
+            if camera_transform.rotation != **camera_attitude {
+                camera_transform.rotation = **camera_attitude;
+            }
         }
         // translate
         if let Ok(locomotion) = positional_inputs.get(inputs.locomotion) {
             let movement_speed = 2.0;
             let linvel = movement_speed * transform.rotation.inverse().mul_vec3(**locomotion);
-            velocity.linvel = linvel;
+            // avoid false change detection
+            if velocity.linvel != linvel {
+                velocity.linvel = linvel;
+            }
         }
 
     }
