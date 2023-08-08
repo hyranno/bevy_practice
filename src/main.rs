@@ -106,7 +106,7 @@ fn setup(
 
 fn player_move(
     mut players: Query<(&mut Transform, &mut Velocity, &PlayerInput, &Children), With<Player>>,
-    mut cameras: Query<&mut Transform, (With<Camera3d>, With<Parent>, Without<Player>)>,
+    mut cameras: Query<(Entity, &mut Transform), (With<Camera3d>, With<Parent>, Without<Player>)>,
     positional_inputs: Query<&PositionalInput>,
     rotational_inputs: Query<&RotationalInput>,
 ) {
@@ -119,8 +119,8 @@ fn player_move(
             }
         }
         // camera_rotation
-        for &child in children {
-            let Ok(mut camera_transform) = cameras.get_mut(child) else {continue;};
+        let child_cameras = cameras.iter_mut().filter(|(entity, _)| children.contains(entity));
+        for (_, mut camera_transform) in child_cameras {
             let Ok(camera_attitude) = rotational_inputs.get(inputs.camera_attitude) else {continue;};
             // avoid false change detection
             if camera_transform.rotation != **camera_attitude {
