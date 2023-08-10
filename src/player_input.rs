@@ -60,12 +60,14 @@ pub struct PlayerInput {
     pub locomotion: Entity,
     pub rotation: Entity,
     pub camera_attitude: Entity,
+    pub jump: Entity,
 }
 impl PlayerInput {
     pub fn new_with_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> Self {
         let mut locomotion = None;
         let mut rotation = None;
         let mut camera_attitude = None;
+        let mut jump = None;
 
         commands.with_children(|builder| {
             let negative_x = builder.spawn((
@@ -139,12 +141,19 @@ impl PlayerInput {
                 RotationalInput::new(Quat::default()),
                 MappedEulerAngle::<DummyLabel>::new(camera_attitude_euler),
             )).id());
+
+            jump = Some(builder.spawn((
+                ButtonInput::new(false),
+                MappedKey::new(KeyCode::Space),
+            )).id());
+
         });
 
         Self {
             locomotion: locomotion.unwrap(),
             rotation: rotation.unwrap(),
             camera_attitude: camera_attitude.unwrap(),
+            jump: jump.unwrap(),
         }
     }
 }

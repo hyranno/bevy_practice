@@ -9,7 +9,7 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 use cascade_input::{
     CascadeInputPlugin, CascadeInputSet,
-    axis::{PositionalInput, RotationalInput},
+    axis::{PositionalInput, RotationalInput}, button_like::{ButtonInput, ButtonLike},
 };
 use player_input::{PlayerInput, PlayerInputPlugin};
 
@@ -109,6 +109,7 @@ fn player_move(
     mut cameras: Query<(Entity, &mut Transform), (With<Camera3d>, With<Parent>, Without<Player>)>,
     positional_inputs: Query<&PositionalInput>,
     rotational_inputs: Query<&RotationalInput>,
+    button_inputs: Query<&ButtonInput, Changed<ButtonInput>>,
 ) {
     for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
         // rotation
@@ -130,12 +131,24 @@ fn player_move(
         // translate
         if let Ok(locomotion) = positional_inputs.get(inputs.locomotion) {
             let movement_speed = 2.0;
-            let linvel = movement_speed * transform.rotation.inverse().mul_vec3(**locomotion);
-            // avoid false change detection
-            if velocity.linvel != linvel {
-                velocity.linvel = linvel;
+            let max_acceleration = 2.0;
+            let target = movement_speed * transform.rotation.inverse().mul_vec3(**locomotion);
+            if 0.0 < target.length() {
+                let target_direction = target.normalize();
+                let speed_diff = target.length() - velocity.linvel.dot(target_direction);
+                let linvel = velocity.linvel + speed_diff.clamp(0.0, max_acceleration) * target_direction;
+                // avoid false change detection
+                if velocity.linvel != linvel {
+                    velocity.linvel = linvel;
+                }
             }
         }
-
+        // jump
+        if let Ok(jump_button) = button_inputs.get(inputs.jump) {
+            if jump_button.is_pressed() {
+                let jump_strength = 4.0;
+                velocity.linvel += jump_strength * Vec3::Y;
+            }
+        }
     }
 }
