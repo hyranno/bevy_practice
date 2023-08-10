@@ -24,6 +24,7 @@ fn main() {
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
         .add_systems(Update, player_move.after(CascadeInputSet::Flush))
+        .add_systems(Update, jump_up.after(CascadeInputSet::Flush).before(player_move))
         .run();
 }
 
@@ -104,12 +105,26 @@ fn setup(
     player_builder.insert(controller);
 }
 
+fn jump_up (
+    mut characters: Query<(Entity, &mut Velocity, &PlayerInput)>,
+    button_inputs: Query<&ButtonInput, Changed<ButtonInput>>,
+    rapier_context: Res<RapierContext>,
+) {
+    for (character, mut velocity, inputs) in characters.iter_mut() {
+        if let Ok(jump_button) = button_inputs.get(inputs.jump) {
+            if 0 < rapier_context.contacts_with(character).count() && jump_button.is_pressed() {
+                let jump_strength = 4.0;
+                velocity.linvel += jump_strength * Vec3::Y;
+            }
+        }
+    }
+}
+
 fn player_move(
     mut players: Query<(&mut Transform, &mut Velocity, &PlayerInput, &Children), With<Player>>,
     mut cameras: Query<(Entity, &mut Transform), (With<Camera3d>, With<Parent>, Without<Player>)>,
     positional_inputs: Query<&PositionalInput>,
     rotational_inputs: Query<&RotationalInput>,
-    button_inputs: Query<&ButtonInput, Changed<ButtonInput>>,
 ) {
     for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
         // rotation
@@ -144,11 +159,5 @@ fn player_move(
             }
         }
         // jump
-        if let Ok(jump_button) = button_inputs.get(inputs.jump) {
-            if jump_button.is_pressed() {
-                let jump_strength = 4.0;
-                velocity.linvel += jump_strength * Vec3::Y;
-            }
-        }
     }
 }
