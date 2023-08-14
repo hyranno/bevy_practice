@@ -12,6 +12,7 @@ use cascade_input::{
     axis::{PositionalInput, RotationalInput}, button_like::{ButtonInput, ButtonLike},
 };
 use player_input::{PlayerInput, PlayerInputPlugin};
+use seldom_state::{trigger::{Trigger, BoolTrigger}, prelude::StateMachine, StateMachinePlugin};
 
 mod util;
 mod cascade_input;
@@ -19,8 +20,9 @@ mod player_input;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, TemporalAntiAliasPlugin, CascadeInputPlugin, PlayerInputPlugin))
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins((DefaultPlugins, TemporalAntiAliasPlugin,))
+        .add_plugins((RapierPhysicsPlugin::<NoUserData>::default(), StateMachinePlugin,))
+        .add_plugins((CascadeInputPlugin, PlayerInputPlugin,))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
         .add_systems(Update, player_move.after(CascadeInputSet::Flush))
@@ -103,6 +105,14 @@ fn setup(
     //controller
     let controller = PlayerInput::new_with_inputs(&mut player_builder);
     player_builder.insert(controller);
+    player_builder.with_children(|parent| {
+        parent.spawn(GroundedStateMachineBundle {
+            sensor: Collider::ball(0.2),
+            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default()),
+            transform: TransformBundle { local: Transform::from_xyz(0.0, -1.7, 0.0), ..default() },
+            ..default()
+        });
+    });
 }
 
 fn jump_up (
@@ -159,5 +169,65 @@ fn player_move(
             }
         }
         // jump
+    }
+}
+
+
+#[derive(Bundle)]
+struct GroundedStateMachineBundle {
+    sensor: Collider,
+    state_machine: StateMachine,
+    transform: TransformBundle,
+    label: GroundedStateMachine,
+    sensor_label: Sensor,
+    initial_state: Grounded,
+}
+impl Default for GroundedStateMachineBundle {
+    fn default() -> Self {
+        Self {
+            sensor: Collider::ball(1.0),
+            state_machine: Self::set_default_transitions(StateMachine::default()),
+            transform: TransformBundle::default(),
+            label: GroundedStateMachine,
+            sensor_label: Sensor,
+            initial_state: Grounded,
+        }
+    }
+}
+impl GroundedStateMachineBundle {
+    fn set_default_transitions(state_machine: StateMachine) -> StateMachine {
+        let ground_contact = GroundContact;
+        state_machine
+            .trans::<Grounded>(ground_contact.not(), Airborne)
+            .trans::<Airborne>(ground_contact, Grounded)
+            .set_trans_logging(true)
+    }
+}
+#[derive(Component)]
+struct GroundedStateMachine;
+#[derive(Clone, Component, Reflect)]
+#[component(storage = "SparseSet")]
+struct Grounded;
+#[derive(Clone, Component, Reflect)]
+#[component(storage = "SparseSet")]
+struct Airborne;
+#[derive(Clone, Component, Reflect)]
+#[component(storage = "SparseSet")]
+struct Landing;
+#[derive(Clone, Component, Reflect)]
+#[component(storage = "SparseSet")]
+struct JumpingUp;
+
+#[derive(Copy, Clone)]
+struct GroundContact;
+impl BoolTrigger for GroundContact {
+    type Param<'w, 's> = Res<'w, RapierContext>;
+    fn trigger(
+        &self,
+        entity: Entity,
+        rapier_context: Self::Param<'_, '_>,
+    ) -> bool {
+        let intersections = rapier_context.intersections_with(entity);
+        0 < intersections.count()
     }
 }
