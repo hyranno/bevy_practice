@@ -9,10 +9,10 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 use cascade_input::{
     CascadeInputPlugin, CascadeInputSet,
-    axis::{PositionalInput, RotationalInput}, button_like::{ButtonInput, ButtonLike},
+    axis::{PositionalInput, RotationalInput}, button_like::ButtonTrigger,
 };
 use player_input::{PlayerInput, PlayerInputPlugin};
-use seldom_state::{trigger::{Trigger, BoolTrigger}, prelude::StateMachine, StateMachinePlugin};
+use seldom_state::{trigger::{Trigger, BoolTrigger, DoneTrigger, Done}, prelude::StateMachine, StateMachinePlugin};
 
 mod util;
 mod cascade_input;
@@ -107,8 +107,8 @@ fn setup(
     player_builder.insert(controller);
     player_builder.with_children(|parent| {
         parent.spawn(GroundedStateMachineBundle {
+            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default(), controller.jump),
             sensor: Collider::ball(0.2),
-            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default()),
             transform: TransformBundle { local: Transform::from_xyz(0.0, -1.7, 0.0), ..default() },
             ..default()
         });
@@ -116,16 +116,27 @@ fn setup(
 }
 
 fn jump_up (
-    mut characters: Query<(Entity, &mut Velocity, &PlayerInput)>,
-    button_inputs: Query<&ButtonInput, Changed<ButtonInput>>,
-    rapier_context: Res<RapierContext>,
+    mut commands: Commands,
+    mut states: Query<(Entity, &mut JumpingUp, &Parent), With<GroundedStateMachine>>,
+    mut velocities: Query<&mut Velocity>,
+    time: Res<Time>,
 ) {
-    for (character, mut velocity, inputs) in characters.iter_mut() {
-        if let Ok(jump_button) = button_inputs.get(inputs.jump) {
-            if 0 < rapier_context.contacts_with(character).count() && jump_button.is_pressed() {
-                let jump_strength = 4.0;
-                velocity.linvel += jump_strength * Vec3::Y;
-            }
+    for (state_machine, mut state, parent) in states.iter_mut() {
+        let Ok(mut velocity) = velocities.get_mut(parent.get()) else {
+            warn!("Parent does not have velocity!");
+            continue;
+        };
+        let target_direction = state.target_velocity.normalize();
+        let speed_diff = state.target_velocity.length() - velocity.linvel.dot(target_direction);
+        let linvel = velocity.linvel + speed_diff.clamp(0.0, state.max_acceleration) * target_direction;
+        // avoid false change detection
+        if velocity.linvel != linvel {
+            velocity.linvel = linvel;
+        }
+        // done after duration
+        state.elapsed_time += time.delta_seconds();
+        if state.duration < state.elapsed_time {
+            commands.entity(state_machine).insert(Done::Success);
         }
     }
 }
@@ -175,8 +186,8 @@ fn player_move(
 
 #[derive(Bundle)]
 struct GroundedStateMachineBundle {
-    sensor: Collider,
     state_machine: StateMachine,
+    sensor: Collider,
     transform: TransformBundle,
     label: GroundedStateMachine,
     sensor_label: Sensor,
@@ -185,8 +196,8 @@ struct GroundedStateMachineBundle {
 impl Default for GroundedStateMachineBundle {
     fn default() -> Self {
         Self {
+            state_machine: StateMachine::default(),
             sensor: Collider::ball(1.0),
-            state_machine: Self::set_default_transitions(StateMachine::default()),
             transform: TransformBundle::default(),
             label: GroundedStateMachine,
             sensor_label: Sensor,
@@ -195,11 +206,19 @@ impl Default for GroundedStateMachineBundle {
     }
 }
 impl GroundedStateMachineBundle {
-    fn set_default_transitions(state_machine: StateMachine) -> StateMachine {
+    fn set_default_transitions(
+        state_machine: StateMachine,
+        jump_button: Entity,
+    ) -> StateMachine {
         let ground_contact = GroundContact;
+        let jump = JumpingUp {max_acceleration: 1.0, ..default()};
+        let jump_trigger = ButtonTrigger {button: jump_button};
         state_machine
             .trans::<Grounded>(ground_contact.not(), Airborne)
             .trans::<Airborne>(ground_contact, Grounded)
+            .trans::<Grounded>(jump_trigger, jump)
+            .trans::<JumpingUp>(jump_trigger.not(), Airborne)
+            .trans::<JumpingUp>(DoneTrigger::Success, Airborne)
             .set_trans_logging(true)
     }
 }
@@ -216,7 +235,22 @@ struct Airborne;
 struct Landing;
 #[derive(Clone, Component, Reflect)]
 #[component(storage = "SparseSet")]
-struct JumpingUp;
+struct JumpingUp {
+    max_acceleration: f32,
+    duration: f32,
+    target_velocity: Vec3,
+    elapsed_time: f32,
+}
+impl Default for JumpingUp {
+    fn default() -> Self {
+        Self {
+            max_acceleration: 1.0,
+            duration: 0.1,
+            target_velocity: 30.0 * Vec3::Y,
+            elapsed_time: 0.0,
+        }
+    }
+}
 
 #[derive(Copy, Clone)]
 struct GroundContact;

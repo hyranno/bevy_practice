@@ -55,7 +55,7 @@ impl Plugin for PlayerInputPlugin {
 }
 
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 pub struct PlayerInput {
     pub locomotion: Entity,
     pub rotation: Entity,

@@ -4,6 +4,7 @@ use bevy::{
     prelude::*,
     input::{keyboard::KeyboardInput, ButtonState},
 };
+use seldom_state::trigger::BoolTrigger;
 use crate::util::ComponentWrapper;
 
 pub trait ButtonLike {
@@ -39,6 +40,25 @@ impl ButtonLikeMut for bool {
     fn release(&mut self) {*self = false}
 }
 
+
+#[derive(Clone, Copy)]
+pub struct ButtonTrigger {
+    pub button: Entity,
+}
+impl BoolTrigger for ButtonTrigger {
+    type Param<'w, 's> = Query<'w, 's, &'static ButtonInput>;
+    fn trigger(
+        &self,
+        _entity: Entity,
+        buttons: Self::Param<'_, '_>,
+    ) -> bool {
+        let Ok(button) = buttons.get(self.button) else {
+            warn!("Entity not found!");
+            return false;
+        };
+        button.is_pressed()
+    }
+}
 
 #[derive(Component)]
 pub struct MappedKey {
