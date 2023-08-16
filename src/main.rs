@@ -25,8 +25,9 @@ fn main() {
         .add_plugins((CascadeInputPlugin, PlayerInputPlugin,))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
-        .add_systems(Update, player_move.after(CascadeInputSet::Flush))
-        .add_systems(Update, jump_up.after(CascadeInputSet::Flush).before(player_move))
+        .add_systems(Update, jump_up.after(CascadeInputSet::Flush))
+        .add_systems(Update, character_rotation.after(jump_up))
+        .add_systems(Update, (grounded_locomotion, airborne_locomotion).after(character_rotation))
         .run();
 }
 
@@ -141,13 +142,12 @@ fn jump_up (
     }
 }
 
-fn player_move(
-    mut players: Query<(&mut Transform, &mut Velocity, &PlayerInput, &Children), With<Player>>,
+fn character_rotation(
+    mut players: Query<(&mut Transform, &PlayerInput, &Children), With<Player>>,
     mut cameras: Query<(Entity, &mut Transform), (With<Camera3d>, With<Parent>, Without<Player>)>,
-    positional_inputs: Query<&PositionalInput>,
     rotational_inputs: Query<&RotationalInput>,
 ) {
-    for (mut transform, mut velocity, inputs, children) in players.iter_mut() {
+    for (mut transform, inputs, children) in players.iter_mut() {
         // rotation
         if let Ok(rotation) = rotational_inputs.get(inputs.rotation) {
             // avoid false change detection
@@ -164,22 +164,72 @@ fn player_move(
                 camera_transform.rotation = **camera_attitude;
             }
         }
-        // translate
-        if let Ok(locomotion) = positional_inputs.get(inputs.locomotion) {
-            let movement_speed = 2.0;
-            let max_acceleration = 2.0;
-            let target = movement_speed * transform.rotation.inverse().mul_vec3(**locomotion);
-            if 0.0 < target.length() {
-                let target_direction = target.normalize();
-                let speed_diff = target.length() - velocity.linvel.dot(target_direction);
-                let linvel = velocity.linvel + speed_diff.clamp(0.0, max_acceleration) * target_direction;
-                // avoid false change detection
-                if velocity.linvel != linvel {
-                    velocity.linvel = linvel;
-                }
+    }
+}
+
+fn grounded_locomotion (
+    mut characters: Query<(&Transform, &mut Velocity, &PlayerInput)>,
+    states: Query<&Parent, Or<(With<Grounded>, With<JumpingUp>)>>,
+    positional_inputs: Query<&PositionalInput>,
+) {
+    for character in states.iter() {
+        let Ok((transform, mut velocity, inputs)) = characters.get_mut(character.get()) else {
+            warn!("Entity not found!");
+            continue;
+        };
+        let Ok(locomotion) = positional_inputs.get(inputs.locomotion) else {
+            warn!("Entity not found!");
+            continue;
+        };
+        // TODO: parameterize
+        let movement_speed = 2.0;
+        let max_acceleration = 2.0;
+        let target_velocity = movement_speed * transform.rotation.inverse().mul_vec3(**locomotion);
+        if 0.0 < target_velocity.length() {
+            let target_direction = target_velocity.normalize();
+            let speed_diff = target_velocity.length() - velocity.linvel.dot(target_direction);
+            let linvel = velocity.linvel + speed_diff.clamp(0.0, max_acceleration) * target_direction;
+            // avoid false change detection
+            if velocity.linvel != linvel {
+                velocity.linvel = linvel;
             }
         }
-        // jump
+    }
+}
+fn airborne_locomotion (
+    mut characters: Query<(&Transform, &mut Velocity, &PlayerInput)>,
+    states: Query<&Parent, With<Airborne>>,
+    positional_inputs: Query<&PositionalInput>,
+) {
+    for character in states.iter() {
+        let Ok((transform, mut velocity, inputs)) = characters.get_mut(character.get()) else {
+            warn!("Entity not found!");
+            continue;
+        };
+        let Ok(locomotion) = positional_inputs.get(inputs.locomotion) else {
+            warn!("Entity not found!");
+            continue;
+        };
+        // This formula intentionally enables circle-jump like infinite speed-up
+        // TODO: parameterize
+        let max_acceleration = 0.02;
+        let max_speed = 0.6;
+        let locomotion_global = transform.rotation.inverse().mul_vec3(**locomotion);
+        let target = max_acceleration * Vec2::new(locomotion_global.x, locomotion_global.z);    // xz() swizzling not found in Bevy
+        if 0.0 < target.length() {
+            let horizontal_velocity = Vec2::new(velocity.linvel.x, velocity.linvel.z);
+            let target_direction = target.normalize();
+            let k = (horizontal_velocity.dot(target_direction) / max_speed).clamp(0.0, 1.0);
+            let acceleration = target * if 0.0 < k {
+                (1.0 - k) + k*horizontal_velocity.normalize().dot(target_direction)/2.0
+            } else {
+                1.0
+            };
+            // avoid false change detection
+            if 0.0 < acceleration.length() {
+                velocity.linvel += Vec3::new(acceleration.x, 0.0, acceleration.y);
+            }
+        }
     }
 }
 
