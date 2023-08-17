@@ -15,8 +15,7 @@ pub struct LocomotionSystemPlugin;
 impl Plugin for LocomotionSystemPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, jump_up.after(CascadeInputSet::Flush))
-            .add_systems(Update, character_rotation.after(jump_up))
+            .add_systems(Update, (jump_up, character_rotation, camera_rotation).after(CascadeInputSet::Flush))
             .add_systems(Update, (grounded_locomotion, airborne_locomotion).after(character_rotation))
         ;
     }
@@ -50,11 +49,10 @@ pub fn jump_up (
 }
 
 pub fn character_rotation(
-    mut players: Query<(&mut Transform, &CharacterInput, &Children)>,
-    mut cameras: Query<(Entity, &mut Transform), (With<Camera3d>, With<Parent>, Without<CharacterInput>)>,
+    mut characters: Query<(&mut Transform, &CharacterInput)>,
     rotational_inputs: Query<&RotationalInput>,
 ) {
-    for (mut transform, inputs, children) in players.iter_mut() {
+    for (mut transform, inputs) in characters.iter_mut() {
         // rotation
         if let Ok(rotation) = rotational_inputs.get(inputs.rotation) {
             // avoid false change detection
@@ -62,14 +60,26 @@ pub fn character_rotation(
                 transform.rotate(**rotation);
             }
         }
-        // camera_rotation
-        let child_cameras = cameras.iter_mut().filter(|(entity, _)| children.contains(entity));
-        for (_, mut camera_transform) in child_cameras {
-            let Ok(camera_attitude) = rotational_inputs.get(inputs.camera_attitude) else {continue;};
-            // avoid false change detection
-            if camera_transform.rotation != **camera_attitude {
-                camera_transform.rotation = **camera_attitude;
-            }
+    }
+}
+
+pub fn camera_rotation (
+    characters: Query<&CharacterInput, With<Children>>,
+    mut cameras: Query<(&mut Transform, &Parent), With<Camera3d>>,
+    rotational_inputs: Query<&RotationalInput>,
+) {
+    for (mut transform, parent) in cameras.iter_mut() {
+        let Ok(inputs) = characters.get(parent.get()) else {
+            warn!("Entity not found!");
+            continue;
+        };
+        let Ok(camera_attitude) = rotational_inputs.get(inputs.camera_attitude) else {
+            warn!("Entity not found!");
+            continue;
+        };
+        // avoid false change detection
+        if transform.rotation != **camera_attitude {
+            transform.rotation = **camera_attitude;
         }
     }
 }
