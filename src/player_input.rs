@@ -1,12 +1,14 @@
 use bevy::{
     prelude::*, ecs::system::EntityCommands,
 };
-use crate::cascade_input::{
-    CascadeInputSet,
-    button_like::{ButtonInput, MappedKey, Toggle, update_toggle_buttons},
-    axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
+use crate::{
+    cascade_input::{
+        CascadeInputSet,
+        button_like::{ButtonInput, MappedKey, Toggle, update_toggle_buttons},
+        axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
+    },
+    character_control::{AttachedInput, Locomotion, Rotation, CameraAttitude, Jump}
 };
-use crate::character_control::CharacterInput;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct DummyLabel;
@@ -56,7 +58,14 @@ impl Plugin for PlayerInputPlugin {
 }
 
 
-pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> CharacterInput {
+#[derive(Bundle)]
+pub struct PlayerInputBundle {
+    pub locomotion: AttachedInput<Locomotion>,
+    pub rotation: AttachedInput<Rotation>,
+    pub camera_attitude: AttachedInput<CameraAttitude>,
+    pub jump: AttachedInput<Jump>,
+}
+pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> PlayerInputBundle {
     let mut locomotion = None;
     let mut rotation = None;
     let mut camera_attitude = None;
@@ -142,11 +151,11 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
 
     });
 
-    CharacterInput {
-        locomotion: locomotion.unwrap(),
-        rotation: rotation.unwrap(),
-        camera_attitude: camera_attitude.unwrap(),
-        jump: jump.unwrap(),
+    PlayerInputBundle {
+        locomotion: AttachedInput::new(locomotion.unwrap()),
+        rotation: AttachedInput::new(rotation.unwrap()),
+        camera_attitude: AttachedInput::new(camera_attitude.unwrap()),
+        jump: AttachedInput::new(jump.unwrap()),
     }
 }
 

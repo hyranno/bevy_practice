@@ -6,9 +6,8 @@ use crate::cascade_input::{
     CascadeInputSet,
     axis::{PositionalInput, RotationalInput}
 };
-use super::CharacterInput;
 
-use super::grounded_states::*;
+use super::{grounded_states::*, Rotation, AttachedInput, CameraAttitude, Locomotion};
 
 
 pub struct LocomotionSystemPlugin;
@@ -49,12 +48,12 @@ pub fn jump_up (
 }
 
 pub fn character_rotation(
-    mut characters: Query<(&mut Transform, &CharacterInput)>,
+    mut characters: Query<(&mut Transform, &AttachedInput<Rotation>)>,
     rotational_inputs: Query<&RotationalInput>,
 ) {
-    for (mut transform, inputs) in characters.iter_mut() {
+    for (mut transform, input) in characters.iter_mut() {
         // rotation
-        if let Ok(rotation) = rotational_inputs.get(inputs.rotation) {
+        if let Ok(rotation) = rotational_inputs.get(**input) {
             // avoid false change detection
             if **rotation != Quat::IDENTITY {
                 transform.rotate(**rotation);
@@ -64,7 +63,7 @@ pub fn character_rotation(
 }
 
 pub fn camera_rotation (
-    characters: Query<&CharacterInput, With<Children>>,
+    characters: Query<&AttachedInput<CameraAttitude>, With<Children>>,
     mut cameras: Query<(&mut Transform, &Parent), With<Camera3d>>,
     rotational_inputs: Query<&RotationalInput>,
 ) {
@@ -73,7 +72,7 @@ pub fn camera_rotation (
             warn!("Entity not found!");
             continue;
         };
-        let Ok(camera_attitude) = rotational_inputs.get(inputs.camera_attitude) else {
+        let Ok(camera_attitude) = rotational_inputs.get(**inputs) else {
             warn!("Entity not found!");
             continue;
         };
@@ -85,16 +84,16 @@ pub fn camera_rotation (
 }
 
 pub fn grounded_locomotion (
-    mut characters: Query<(&Transform, &mut Velocity, &CharacterInput)>,
+    mut characters: Query<(&Transform, &mut Velocity, &AttachedInput<Locomotion>)>,
     states: Query<&Parent, Or<(With<Grounded>, With<JumpingUp>)>>,
     positional_inputs: Query<&PositionalInput>,
 ) {
     for character in states.iter() {
-        let Ok((transform, mut velocity, inputs)) = characters.get_mut(character.get()) else {
+        let Ok((transform, mut velocity, input)) = characters.get_mut(character.get()) else {
             warn!("Entity not found!");
             continue;
         };
-        let Ok(locomotion) = positional_inputs.get(inputs.locomotion) else {
+        let Ok(locomotion) = positional_inputs.get(**input) else {
             warn!("Entity not found!");
             continue;
         };
@@ -115,16 +114,16 @@ pub fn grounded_locomotion (
 }
 
 pub fn airborne_locomotion (
-    mut characters: Query<(&Transform, &mut Velocity, &CharacterInput)>,
+    mut characters: Query<(&Transform, &mut Velocity, &AttachedInput<Locomotion>)>,
     states: Query<&Parent, With<Airborne>>,
     positional_inputs: Query<&PositionalInput>,
 ) {
     for character in states.iter() {
-        let Ok((transform, mut velocity, inputs)) = characters.get_mut(character.get()) else {
+        let Ok((transform, mut velocity, input)) = characters.get_mut(character.get()) else {
             warn!("Entity not found!");
             continue;
         };
-        let Ok(locomotion) = positional_inputs.get(inputs.locomotion) else {
+        let Ok(locomotion) = positional_inputs.get(**input) else {
             warn!("Entity not found!");
             continue;
         };

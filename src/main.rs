@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use bevy::{
     pbr::{
         ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionQualityLevel,
@@ -105,14 +107,14 @@ fn setup(
         .add_child(camera);
     //controller
     let controller = create_player_inputs(&mut player_builder);
-    player_builder.insert(controller);
     player_builder.with_children(|parent| {
         parent.spawn(GroundedStateMachineBundle {
-            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default(), controller.jump),
+            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default(), *(controller.jump.deref())),
             sensor: Collider::ball(0.2),
             transform: TransformBundle { local: Transform::from_xyz(0.0, -1.7, 0.0), ..default() },
             ..default()
         });
     });
+    player_builder.insert(controller);
 }
 

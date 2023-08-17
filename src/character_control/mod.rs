@@ -2,16 +2,23 @@ use bevy::prelude::*;
 
 use locomotion_system::LocomotionSystemPlugin;
 
+use crate::util::ComponentWrapper;
+
 pub mod grounded_states;
 pub mod locomotion_system;
 
-#[derive(Component, Clone, Copy)]
-pub struct CharacterInput {
-    pub locomotion: Entity,
-    pub rotation: Entity,
-    pub camera_attitude: Entity,
-    pub jump: Entity,
-}
+
+pub type AttachedInput<Label> = ComponentWrapper<Entity, Label>;
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct Locomotion;
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct Rotation;
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct  CameraAttitude;
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+pub struct Jump;
+
 
 pub struct CharacterControlPlugin;
 impl Plugin for CharacterControlPlugin {
