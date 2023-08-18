@@ -16,16 +16,17 @@ impl Plugin for ProjectileSpawnerPlugin {
 fn fire_simple_ball(
     mut commands: Commands,
     inputs: Query<&ButtonInput, Changed<ButtonInput>>,
-    spawners: Query<&SimpleBallProjectileSpawner>,
+    spawners: Query<(&SimpleBallProjectileSpawner, &GlobalTransform)>,
     bundle: Res<SimpleBallProjectileBundle>,
 ) {
-    for spawner in spawners.iter() {
+    for (spawner, transform) in spawners.iter() {
         let Ok(input) = inputs.get(spawner.trigger) else { continue; };
         if !input.is_pressed() { continue; }
-        // TODO set transform, velocity
+        let local_linvel = spawner.muzzle_speed * transform.forward();
         let mut projectile_builder = commands.spawn(bundle.clone());
-        projectile_builder.insert(Transform::from_xyz(0.0, 2.0, 0.0));
-        projectile_builder.insert(Velocity::linear(spawner.muzzle_speed * Vec3::Y));
+        projectile_builder.insert(Transform::from(*transform));
+        // TODO add spawner global velocity to projectile velocity
+        projectile_builder.insert(Velocity::linear(local_linvel));
     }
 }
 
