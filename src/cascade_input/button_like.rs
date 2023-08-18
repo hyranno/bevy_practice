@@ -9,7 +9,7 @@ use crate::util::ComponentWrapper;
 
 pub trait ButtonLike {
     fn is(&self, state: ButtonState) -> bool;
-    fn is_pressed(&self) -> bool {
+    fn pressed(&self) -> bool {
         self.is(ButtonState::Pressed)
     }
 }
@@ -56,7 +56,7 @@ impl BoolTrigger for ButtonTrigger {
             warn!("Entity not found!");
             return false;
         };
-        button.is_pressed()
+        button.pressed()
     }
 }
 

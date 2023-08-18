@@ -45,8 +45,8 @@ pub fn update_four_button_axis (
             continue;
         };
         let value = Vec2::new(
-            if negative_x.is_pressed() {-1.0} else {0.0} + if positive_x.is_pressed() {1.0} else {0.0},
-            if negative_y.is_pressed() {-1.0} else {0.0} + if positive_y.is_pressed() {1.0} else {0.0},
+            if negative_x.pressed() {-1.0} else {0.0} + if positive_x.pressed() {1.0} else {0.0},
+            if negative_y.pressed() {-1.0} else {0.0} + if positive_y.pressed() {1.0} else {0.0},
         );
         // check real change for component change detection
         if **stick != value {

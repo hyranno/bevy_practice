@@ -21,7 +21,7 @@ fn fire_simple_ball(
 ) {
     for (spawner, transform) in spawners.iter() {
         let Ok(input) = inputs.get(spawner.trigger) else { continue; };
-        if !input.is_pressed() { continue; }
+        if !input.pressed() { continue; }
         let local_linvel = spawner.muzzle_speed * transform.forward();
         let mut projectile_builder = commands.spawn(bundle.clone());
         projectile_builder.insert(Transform::from(*transform));
