@@ -3,7 +3,7 @@ use bevy::{
 };
 use crate::cascade_input::{
     CascadeInputSet,
-    button_like::{ButtonInput, MappedKey, Toggle, update_toggle_buttons},
+    button_like::{ButtonInput, MappedDeviceButton, Toggle, update_toggle_buttons, DeviceButtonCode},
     axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
 };
 
@@ -72,23 +72,23 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
     commands.with_children(|builder| {
         let negative_x = builder.spawn((
             ButtonInput::new(false),
-            MappedKey::new(KeyCode::A),
+            MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::A)),
         )).id();
         let positive_x = builder.spawn((
             ButtonInput::new(false),
-            MappedKey::new(KeyCode::D),
+            MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::D)),
         )).id();
         let negative_y = builder.spawn((
             ButtonInput::new(false),
-            MappedKey::new(KeyCode::S),
+            MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::S)),
         )).id();
         let positive_y = builder.spawn((
             ButtonInput::new(false),
-            MappedKey::new(KeyCode::W),
+            MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::W)),
         )).id();
         let walk_key = builder.spawn((
             ButtonInput::new(false),
-            MappedKey::new(KeyCode::C),
+            MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::C)),
         )).id();
         let walking = builder.spawn((
             ButtonInput::new(false),
@@ -144,12 +144,12 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
 
         jump = Some(builder.spawn((
             ButtonInput::new(false),
-            MappedKey::new(KeyCode::Space),
+            MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::Space)),
         )).id());
 
         fire = Some(builder.spawn((
             ButtonInput::new(false),
-            MappedKey::new(KeyCode::F),
+            MappedDeviceButton::new(DeviceButtonCode::Mouse(MouseButton::Left)),
         )).id());
 
     });

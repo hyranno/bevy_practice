@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use bevy::{
     prelude::*,
-    input::{keyboard::KeyboardInput, ButtonState},
+    input::{keyboard::KeyboardInput, ButtonState, mouse::MouseButtonInput},
 };
 use seldom_state::trigger::BoolTrigger;
 use crate::util::ComponentWrapper;
@@ -60,26 +60,33 @@ impl BoolTrigger for ButtonTrigger {
     }
 }
 
-#[derive(Component)]
-pub struct MappedKey {
-    pub key_code: KeyCode,
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum DeviceButtonCode {
+    Key(KeyCode),
+    Mouse(MouseButton),
+    // Gamepad(GamepadButtonType)
 }
-impl MappedKey {
-    pub fn new(key_code: KeyCode) -> Self {
+#[derive(Component)]
+pub struct MappedDeviceButton {
+    pub code: DeviceButtonCode,
+}
+impl MappedDeviceButton {
+    pub fn new(code: DeviceButtonCode) -> Self {
         Self {
-            key_code: key_code,
+            code,
         }
     }
 }
 
 pub fn update_key_mapped_buttons (
-    mut buttons: Query<(&mut ButtonInput, &MappedKey)>,
+    mut buttons: Query<(&mut ButtonInput, &MappedDeviceButton)>,
     mut keyboard_input_events: EventReader<KeyboardInput>,
+    mut mouse_button_input_events: EventReader<MouseButtonInput>,
 ) {
     for event in keyboard_input_events.iter() {
         let Some(key_code) = event.key_code else {continue;};
-        for (mut button, mapped_key) in buttons.iter_mut() {
-            if key_code == mapped_key.key_code {
+        for (mut button, mapped_button) in buttons.iter_mut() {
+            if DeviceButtonCode::Key(key_code) == mapped_button.code {
                 // avoid false change detection
                 if !button.is(event.state) {
                     button.set_state(event.state)
@@ -87,7 +94,17 @@ pub fn update_key_mapped_buttons (
             }
         }
     }
-}
+    for event in mouse_button_input_events.iter() {
+        let button_code = event.button;
+        for (mut button, mapped_button) in buttons.iter_mut() {
+            if DeviceButtonCode::Mouse(button_code) == mapped_button.code {
+                // avoid false change detection
+                if !button.is(event.state) {
+                    button.set_state(event.state)
+                }
+            }
+        }
+    }}
 
 
 
