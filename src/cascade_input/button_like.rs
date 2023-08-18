@@ -80,7 +80,10 @@ pub fn update_key_mapped_buttons (
         let Some(key_code) = event.key_code else {continue;};
         for (mut button, mapped_key) in buttons.iter_mut() {
             if key_code == mapped_key.key_code {
-                button.set_state(event.state)
+                // avoid false change detection
+                if !button.is(event.state) {
+                    button.set_state(event.state)
+                }
             }
         }
     }
