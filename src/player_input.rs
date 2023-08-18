@@ -1,14 +1,10 @@
 use bevy::{
     prelude::*, ecs::system::EntityCommands,
 };
-use bevy_rapier3d::prelude::Velocity;
-use crate::{
-    cascade_input::{
-        CascadeInputSet,
-        button_like::{ButtonInput, MappedKey, Toggle, update_toggle_buttons},
-        axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
-    },
-    character_control::{AttachedInput, Locomotion, Rotation, CameraAttitude, Jump}, projectile_spawner::SimpleBallProjectileSpawner
+use crate::cascade_input::{
+    CascadeInputSet,
+    button_like::{ButtonInput, MappedKey, Toggle, update_toggle_buttons},
+    axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -59,18 +55,19 @@ impl Plugin for PlayerInputPlugin {
 }
 
 
-#[derive(Bundle)]
-pub struct PlayerInputBundle {
-    pub locomotion: AttachedInput<Locomotion>,
-    pub rotation: AttachedInput<Rotation>,
-    pub camera_attitude: AttachedInput<CameraAttitude>,
-    pub jump: AttachedInput<Jump>,
+pub struct PlayerInputs {
+    pub locomotion: Entity,
+    pub rotation: Entity,
+    pub camera_attitude: Entity,
+    pub jump: Entity,
+    pub fire: Entity,
 }
-pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> PlayerInputBundle {
+pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> PlayerInputs {
     let mut locomotion = None;
     let mut rotation = None;
     let mut camera_attitude = None;
     let mut jump = None;
+    let mut fire = None;
 
     commands.with_children(|builder| {
         let negative_x = builder.spawn((
@@ -150,29 +147,19 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
             MappedKey::new(KeyCode::Space),
         )).id());
 
-        let fire = builder.spawn((
+        fire = Some(builder.spawn((
             ButtonInput::new(false),
             MappedKey::new(KeyCode::F),
-        )).id();
-        builder.spawn((
-            SimpleBallProjectileSpawner {
-                trigger: fire,
-                muzzle_speed: 10.0,
-            },
-            Velocity::default(),
-            TransformBundle {
-                local: Transform::from_xyz(0.0, 2.5, 1.0),
-                ..default()
-            }
-        ));
+        )).id());
 
     });
 
-    PlayerInputBundle {
-        locomotion: AttachedInput::new(locomotion.unwrap()),
-        rotation: AttachedInput::new(rotation.unwrap()),
-        camera_attitude: AttachedInput::new(camera_attitude.unwrap()),
-        jump: AttachedInput::new(jump.unwrap()),
+    PlayerInputs {
+        locomotion: locomotion.unwrap(),
+        rotation: rotation.unwrap(),
+        camera_attitude: camera_attitude.unwrap(),
+        jump: jump.unwrap(),
+        fire: fire.unwrap()
     }
 }
 

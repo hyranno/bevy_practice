@@ -1,4 +1,3 @@
-use std::ops::Deref;
 
 use bevy::{
     pbr::{
@@ -9,13 +8,13 @@ use bevy::{
     prelude::*,
 };
 use bevy_rapier3d::prelude::*;
-use projectile_spawner::ProjectileSpawnerPlugin;
+use projectile_spawner::{ProjectileSpawnerPlugin, SimpleBallProjectileSpawner};
 use seldom_state::prelude::*;
 
 use cascade_input::CascadeInputPlugin;
 use character_control::{
     grounded_states::GroundedStateMachineBundle,
-    CharacterControlPlugin,
+    CharacterControlPlugin, AttachedInput, Locomotion, CameraAttitude, Jump, Rotation,
 };
 use player_input::{PlayerInputPlugin, create_player_inputs};
 
@@ -109,14 +108,30 @@ fn setup(
         .add_child(camera);
     //controller
     let controller = create_player_inputs(&mut player_builder);
+    player_builder.insert((
+        AttachedInput::<Locomotion>::new(controller.locomotion),
+        AttachedInput::<Rotation>::new(controller.rotation),
+        AttachedInput::<CameraAttitude>::new(controller.camera_attitude),
+        AttachedInput::<Jump>::new(controller.jump),
+    ));
     player_builder.with_children(|parent| {
+        parent.spawn((
+            SimpleBallProjectileSpawner {
+                trigger: controller.fire,
+                muzzle_speed: 10.0,
+            },
+            Velocity::default(),
+            TransformBundle {
+                local: Transform::from_xyz(0.0, 2.5, -1.0),
+                ..default()
+            }
+        ));
         parent.spawn(GroundedStateMachineBundle {
-            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default(), *(controller.jump.deref())),
+            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default(), controller.jump),
             sensor: Collider::ball(0.2),
             transform: TransformBundle { local: Transform::from_xyz(0.0, -1.7, 0.0), ..default() },
             ..default()
         });
     });
-    player_builder.insert(controller);
 }
 
