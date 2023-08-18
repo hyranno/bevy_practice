@@ -1,13 +1,14 @@
 use bevy::{
     prelude::*, ecs::system::EntityCommands,
 };
+use bevy_rapier3d::prelude::Velocity;
 use crate::{
     cascade_input::{
         CascadeInputSet,
         button_like::{ButtonInput, MappedKey, Toggle, update_toggle_buttons},
         axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
     },
-    character_control::{AttachedInput, Locomotion, Rotation, CameraAttitude, Jump}
+    character_control::{AttachedInput, Locomotion, Rotation, CameraAttitude, Jump}, projectile_spawner::SimpleBallProjectileSpawner
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -148,6 +149,22 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
             ButtonInput::new(false),
             MappedKey::new(KeyCode::Space),
         )).id());
+
+        let fire = builder.spawn((
+            ButtonInput::new(false),
+            MappedKey::new(KeyCode::F),
+        )).id();
+        builder.spawn((
+            SimpleBallProjectileSpawner {
+                trigger: fire,
+                muzzle_speed: 10.0,
+            },
+            Velocity::default(),
+            TransformBundle {
+                local: Transform::from_xyz(0.0, 2.5, 1.0),
+                ..default()
+            }
+        ));
 
     });
 

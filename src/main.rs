@@ -9,6 +9,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_rapier3d::prelude::*;
+use projectile_spawner::ProjectileSpawnerPlugin;
 use seldom_state::prelude::*;
 
 use cascade_input::CascadeInputPlugin;
@@ -22,12 +23,13 @@ mod util;
 mod cascade_input;
 mod character_control;
 mod player_input;
+mod projectile_spawner;
 
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins, TemporalAntiAliasPlugin,))
         .add_plugins((RapierPhysicsPlugin::<NoUserData>::default(), StateMachinePlugin,))
-        .add_plugins((CascadeInputPlugin, CharacterControlPlugin, PlayerInputPlugin,))
+        .add_plugins((CascadeInputPlugin, CharacterControlPlugin, PlayerInputPlugin, ProjectileSpawnerPlugin, ))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
         .run();
