@@ -84,7 +84,7 @@ pub fn head_rotation (
 }
 
 pub fn grounded_locomotion (
-    mut characters: Query<(&Transform, &mut Velocity, &AttachedInput<Locomotion>)>,
+    mut characters: Query<(&GlobalTransform, &mut Velocity, &AttachedInput<Locomotion>)>,
     states: Query<&Parent, Or<(With<Grounded>, With<JumpingUp>)>>,
     positional_inputs: Query<&PositionalInput>,
 ) {
@@ -100,7 +100,8 @@ pub fn grounded_locomotion (
         // TODO: parameterize
         let movement_speed = 2.0;
         let max_acceleration = 2.0;
-        let target_velocity = movement_speed * transform.rotation.inverse().mul_vec3(**locomotion);
+        let (_scale, rotation, _translation) = transform.to_scale_rotation_translation();
+        let target_velocity = movement_speed * rotation.mul_vec3(**locomotion);
         if 0.0 < target_velocity.length() {
             let target_direction = target_velocity.normalize();
             let speed_diff = target_velocity.length() - velocity.linvel.dot(target_direction);
@@ -114,7 +115,7 @@ pub fn grounded_locomotion (
 }
 
 pub fn airborne_locomotion (
-    mut characters: Query<(&Transform, &mut Velocity, &AttachedInput<Locomotion>)>,
+    mut characters: Query<(&GlobalTransform, &mut Velocity, &AttachedInput<Locomotion>)>,
     states: Query<&Parent, With<Airborne>>,
     positional_inputs: Query<&PositionalInput>,
 ) {
@@ -131,7 +132,8 @@ pub fn airborne_locomotion (
         // TODO: parameterize
         let max_acceleration = 0.02;
         let max_speed = 0.6;
-        let locomotion_global = transform.rotation.inverse().mul_vec3(**locomotion);
+        let (_scale, rotation, _translation) = transform.to_scale_rotation_translation();
+        let locomotion_global = rotation.mul_vec3(**locomotion);
         let target = max_acceleration * Vec2::new(locomotion_global.x, locomotion_global.z);    // xz() swizzling not found in Bevy
         if 0.0 < target.length() {
             let horizontal_velocity = Vec2::new(velocity.linvel.x, velocity.linvel.z);
