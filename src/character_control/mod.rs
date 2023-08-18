@@ -10,12 +10,20 @@ pub mod locomotion_system;
 
 pub type AttachedInput<Label> = ComponentWrapper<Entity, Label>;
 
+#[derive(Component, Default)]
+pub struct Head;
+#[derive(Bundle, Default)]
+pub struct HeadBundle {
+    head: Head,
+    transform: TransformBundle,
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct Locomotion;
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct Rotation;
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
-pub struct  CameraAttitude;
+pub struct  HeadAttitude;
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct Jump;
 

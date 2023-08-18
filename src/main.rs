@@ -14,7 +14,7 @@ use seldom_state::prelude::*;
 use cascade_input::CascadeInputPlugin;
 use character_control::{
     grounded_states::GroundedStateMachineBundle,
-    CharacterControlPlugin, AttachedInput, Locomotion, CameraAttitude, Jump, Rotation,
+    CharacterControlPlugin, AttachedInput, Locomotion, HeadAttitude, Jump, Rotation, HeadBundle,
 };
 use player_input::{PlayerInputPlugin, create_player_inputs};
 
@@ -105,28 +105,32 @@ fn setup(
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Collider::capsule_y(1.5, 0.3))
         .insert(KinematicCharacterController {..default()})
-        .add_child(camera);
+    ;
     //controller
     let controller = create_player_inputs(&mut player_builder);
     player_builder.insert((
         AttachedInput::<Locomotion>::new(controller.locomotion),
         AttachedInput::<Rotation>::new(controller.rotation),
-        AttachedInput::<CameraAttitude>::new(controller.camera_attitude),
+        AttachedInput::<HeadAttitude>::new(controller.head_attitude),
         AttachedInput::<Jump>::new(controller.jump),
     ));
-    player_builder.with_children(|parent| {
-        parent.spawn((
-            SimpleBallProjectileSpawner {
-                trigger: controller.fire,
-                muzzle_speed: 10.0,
-            },
-            Velocity::default(),
-            TransformBundle {
-                local: Transform::from_xyz(0.0, 2.5, -1.0),
-                ..default()
-            }
-        ));
-        parent.spawn(GroundedStateMachineBundle {
+    player_builder.with_children(|player| {
+        let mut head = player.spawn(HeadBundle::default());
+        head.add_child(camera);
+        head.with_children(|head| {
+            head.spawn((
+                SimpleBallProjectileSpawner {
+                    trigger: controller.fire,
+                    muzzle_speed: 10.0,
+                },
+                Velocity::default(),
+                TransformBundle {
+                    local: Transform::from_xyz(0.0, 2.5, -1.0),
+                    ..default()
+                }
+            ));
+        });
+        player.spawn(GroundedStateMachineBundle {
             state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default(), controller.jump),
             sensor: Collider::ball(0.2),
             transform: TransformBundle { local: Transform::from_xyz(0.0, -1.7, 0.0), ..default() },

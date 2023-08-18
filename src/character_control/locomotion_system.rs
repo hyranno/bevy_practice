@@ -7,14 +7,14 @@ use crate::cascade_input::{
     axis::{PositionalInput, RotationalInput}
 };
 
-use super::{grounded_states::*, Rotation, AttachedInput, CameraAttitude, Locomotion};
+use super::{grounded_states::*, Rotation, AttachedInput, HeadAttitude, Locomotion, Head};
 
 
 pub struct LocomotionSystemPlugin;
 impl Plugin for LocomotionSystemPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, (jump_up, character_rotation, camera_rotation).after(CascadeInputSet::Flush))
+            .add_systems(Update, (jump_up, character_rotation, head_rotation).after(CascadeInputSet::Flush))
             .add_systems(Update, (grounded_locomotion, airborne_locomotion).after(character_rotation))
         ;
     }
@@ -62,23 +62,23 @@ pub fn character_rotation(
     }
 }
 
-pub fn camera_rotation (
-    characters: Query<&AttachedInput<CameraAttitude>, With<Children>>,
-    mut cameras: Query<(&mut Transform, &Parent), With<Camera3d>>,
+pub fn head_rotation (
+    characters: Query<&AttachedInput<HeadAttitude>, With<Children>>,
+    mut heads: Query<(&mut Transform, &Parent), With<Head>>,
     rotational_inputs: Query<&RotationalInput>,
 ) {
-    for (mut transform, parent) in cameras.iter_mut() {
+    for (mut transform, parent) in heads.iter_mut() {
         let Ok(inputs) = characters.get(parent.get()) else {
             warn!("Entity not found!");
             continue;
         };
-        let Ok(camera_attitude) = rotational_inputs.get(**inputs) else {
+        let Ok(head_attitude) = rotational_inputs.get(**inputs) else {
             warn!("Entity not found!");
             continue;
         };
         // avoid false change detection
-        if transform.rotation != **camera_attitude {
-            transform.rotation = **camera_attitude;
+        if transform.rotation != **head_attitude {
+            transform.rotation = **head_attitude;
         }
     }
 }

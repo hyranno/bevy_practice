@@ -58,14 +58,14 @@ impl Plugin for PlayerInputPlugin {
 pub struct PlayerInputs {
     pub locomotion: Entity,
     pub rotation: Entity,
-    pub camera_attitude: Entity,
+    pub head_attitude: Entity,
     pub jump: Entity,
     pub fire: Entity,
 }
 pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> PlayerInputs {
     let mut locomotion = None;
     let mut rotation = None;
-    let mut camera_attitude = None;
+    let mut head_attitude = None;
     let mut jump = None;
     let mut fire = None;
 
@@ -119,7 +119,7 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
         let rotation_euler = builder.spawn((
             EulerAngleInput::new(Vec3::ZERO),
         )).id();
-        let camera_attitude_euler = builder.spawn((
+        let head_attitude_euler = builder.spawn((
             EulerAngleInput::new(Vec3::ZERO),
         )).id();
         builder.spawn(( // rotation_stick
@@ -130,16 +130,16 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
             TargetRotation {
                 sensitivity: Vec2::ONE,
                 rotation: rotation_euler,
-                camera_attitude: camera_attitude_euler,
+                head_attitude: head_attitude_euler,
             }
         ));
         rotation = Some(builder.spawn((
             RotationalInput::new(Quat::default()),
             MappedEulerAngle::<DummyLabel>::new(rotation_euler),
         )).id());
-        camera_attitude = Some(builder.spawn((
+        head_attitude = Some(builder.spawn((
             RotationalInput::new(Quat::default()),
-            MappedEulerAngle::<DummyLabel>::new(camera_attitude_euler),
+            MappedEulerAngle::<DummyLabel>::new(head_attitude_euler),
         )).id());
 
         jump = Some(builder.spawn((
@@ -157,7 +157,7 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
     PlayerInputs {
         locomotion: locomotion.unwrap(),
         rotation: rotation.unwrap(),
-        camera_attitude: camera_attitude.unwrap(),
+        head_attitude: head_attitude.unwrap(),
         jump: jump.unwrap(),
         fire: fire.unwrap()
     }
@@ -216,7 +216,7 @@ fn update_locomotion_from_stick(
 struct  TargetRotation {    // attach this to stick
     sensitivity: Vec2,
     rotation: Entity,
-    camera_attitude: Entity,
+    head_attitude: Entity,
 }
 fn update_rotation_from_stick(
     mut angles: Query<&mut EulerAngleInput>,
@@ -232,14 +232,14 @@ fn update_rotation_from_stick(
         if **rotation != rotation_value {
             **rotation = rotation_value;
         }
-        let Ok(mut camera_attitude) = angles.get_mut(target.camera_attitude) else {
+        let Ok(mut head_attitude) = angles.get_mut(target.head_attitude) else {
             warn!("Entity not found");
             continue;
         };
-        let attitude_x = (camera_attitude.x - target.sensitivity.y * stick.y).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
+        let attitude_x = (head_attitude.x - target.sensitivity.y * stick.y).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
         // avoid false change detection
-        if camera_attitude.x != attitude_x {
-            camera_attitude.x = attitude_x;
+        if head_attitude.x != attitude_x {
+            head_attitude.x = attitude_x;
         }
     }
 }
