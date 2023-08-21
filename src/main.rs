@@ -1,11 +1,12 @@
 
+use bevy::prelude::*;
+#[cfg(not(target_family="wasm"))]
 use bevy::{
     pbr::{
         ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionQualityLevel,
         ScreenSpaceAmbientOcclusionSettings,
     },
     core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
-    prelude::*,
 };
 use bevy_rapier3d::prelude::*;
 use projectile_spawner::{ProjectileSpawnerPlugin, SimpleBallProjectileSpawner};
@@ -25,14 +26,26 @@ mod player_input;
 mod projectile_spawner;
 
 fn main() {
-    App::new()
-        .add_plugins((DefaultPlugins, TemporalAntiAliasPlugin,))
+    let mut app = App::new();
+    setup_app(&mut app)
         .add_plugins((RapierPhysicsPlugin::<NoUserData>::default(), StateMachinePlugin,))
         .add_plugins((CascadeInputPlugin, CharacterControlPlugin, PlayerInputPlugin, ProjectileSpawnerPlugin, ))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
-        .run();
+    ;
+    app.run();
 }
+
+#[cfg(not(target_family="wasm"))]
+fn setup_app(app: &mut App) -> &mut App {
+        app.add_plugins((DefaultPlugins, TemporalAntiAliasPlugin))
+}
+
+#[cfg(target_family="wasm")]
+fn setup_app(app: &mut App) -> &mut App {
+        app.add_plugins(DefaultPlugins)
+}
+
 
 #[derive(Component)]
 struct Player;
@@ -80,19 +93,7 @@ fn setup(
             ..default()
         });
     // camera
-    let camera = commands
-        .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 2.5, 0.0),
-            ..default()
-        })
-        .insert(ScreenSpaceAmbientOcclusionBundle {
-            settings: ScreenSpaceAmbientOcclusionSettings {
-                quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
-            },
-            ..default()
-        })
-        .insert(TemporalAntiAliasBundle::default())
-        .id();
+    let camera = spawn_camera(&mut commands);
     // player
     let mut player_builder = commands.spawn(Player);
     player_builder
@@ -139,3 +140,35 @@ fn setup(
     });
 }
 
+#[cfg(not(target_family="wasm"))]
+fn spawn_camera(commands: &mut Commands) -> Entity {
+    commands
+        .spawn(
+            Camera3dBundle {
+                transform: Transform::from_xyz(0.0, 2.5, 0.0),
+                ..default()
+            }
+        )
+        .insert(
+            ScreenSpaceAmbientOcclusionBundle {
+                settings: ScreenSpaceAmbientOcclusionSettings {
+                    quality_level: ScreenSpaceAmbientOcclusionQualityLevel::Medium,
+                },
+                ..default()
+            }
+        )
+        .insert(
+            TemporalAntiAliasBundle::default()
+        )
+        .id()
+}
+
+#[cfg(target_family="wasm")]
+fn spawn_camera(commands: &mut Commands) -> Entity {
+    commands.spawn(
+        Camera3dBundle {
+            transform: Transform::from_xyz(0.0, 2.5, 0.0),
+            ..default()
+        },    
+    ).id()
+}
