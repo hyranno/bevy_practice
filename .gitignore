@@ -1,3 +1,6 @@
 .vscode
 memo.txt
 /target
+/doc
+/web_play/*.wasm
+/web_play/*.js
