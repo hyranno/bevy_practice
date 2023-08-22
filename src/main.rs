@@ -131,8 +131,11 @@ fn setup(
                 }
             ));
         });
+        let grounded_state_machine = StateMachine::default();
+        let grounded_state_machine = GroundedStateMachineBundle::set_default_transitions(grounded_state_machine, controller.jump);
+        let grounded_state_machine = GroundedStateMachineBundle::set_default_state_components(grounded_state_machine);
         player.spawn(GroundedStateMachineBundle {
-            state_machine: GroundedStateMachineBundle::set_default_transitions(StateMachine::default(), controller.jump),
+            state_machine: grounded_state_machine,
             sensor: Collider::ball(0.2),
             transform: TransformBundle { local: Transform::from_xyz(0.0, -1.7, 0.0), ..default() },
             ..default()
