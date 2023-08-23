@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use locomotion_system::LocomotionSystemPlugin;
 
-use crate::util::ComponentWrapper;
+use crate::util::ecs::ComponentWrapper;
 
 pub mod grounded_states;
 pub mod locomotion_system;

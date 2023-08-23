@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use bevy::{prelude::*, input::mouse::MouseMotion};
 
-use crate::util::ComponentWrapper;
+use crate::util::ecs::ComponentWrapper;
 
 use super::button_like::{ButtonLike, ButtonInput};
 

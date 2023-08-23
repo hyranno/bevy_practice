@@ -5,7 +5,7 @@ use bevy::{
     input::{keyboard::KeyboardInput, ButtonState, mouse::MouseButtonInput},
 };
 use seldom_state::trigger::BoolTrigger;
-use crate::util::ComponentWrapper;
+use crate::util::ecs::ComponentWrapper;
 
 pub trait ButtonLike {
     fn is(&self, state: ButtonState) -> bool;
