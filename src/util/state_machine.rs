@@ -25,6 +25,14 @@ pub struct Timeout {
     pub duration: f32,
     pub elapsed_time: f32,
 }
+impl Timeout {
+    pub fn new(duration: f32) -> Self {
+        Self {
+            duration: duration,
+            elapsed_time: 0.0,
+        }
+    }
+}
 pub fn timeout (
     mut commands: Commands,
     mut params: Query<(Entity, &mut Timeout)>,

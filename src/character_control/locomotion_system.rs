@@ -25,6 +25,11 @@ pub struct JumpUp {
     pub target_velocity: Vec3,
     pub max_acceleration: f32,
 }
+impl Default for JumpUp {
+    fn default() -> Self {
+        Self { target_velocity: 20.0 * Vec3::Y, max_acceleration: 1.0 }
+    }
+}
 pub fn jump_up (
     mut params: Query<(&mut JumpUp, &Parent)>,
     mut velocities: Query<&mut Velocity>,
@@ -44,7 +49,7 @@ pub fn jump_up (
     }
 }
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Default, Clone, Copy)]
 pub struct CharacterRotation;
 pub fn character_rotation(
     mut characters: Query<(&mut Transform, &AttachedInput<Rotation>)>,
@@ -66,7 +71,7 @@ pub fn character_rotation(
     }
 }
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Default, Clone, Copy)]
 pub struct HeadRotation;
 pub fn head_rotation (
     characters: Query<&AttachedInput<HeadAttitude>, With<Children>>,
@@ -98,6 +103,11 @@ pub fn head_rotation (
 pub struct BasicLocomotion {
     pub speed: f32,
     pub max_acceleration: f32,
+}
+impl Default for BasicLocomotion {
+    fn default() -> Self {
+        Self { speed: 4.0, max_acceleration: 2.0 }
+    }
 }
 pub fn basic_locomotion (
     mut characters: Query<(&GlobalTransform, &mut Velocity, &AttachedInput<Locomotion>)>,
@@ -131,6 +141,11 @@ pub fn basic_locomotion (
 pub struct AirborneLocomotion {
     pub speed: f32,
     pub max_acceleration: f32,
+}
+impl Default for AirborneLocomotion {
+    fn default() -> Self {
+        Self { speed: 1.0, max_acceleration: 0.2 }
+    }
 }
 pub fn airborne_locomotion (
     mut characters: Query<(&GlobalTransform, &mut Velocity, &AttachedInput<Locomotion>)>,

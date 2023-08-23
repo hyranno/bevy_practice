@@ -31,44 +31,7 @@ impl Default for GroundedStateMachineBundle {
         }
     }
 }
-impl GroundedStateMachineBundle {
-    pub fn set_default_transitions(
-        state_machine: StateMachine,
-        jump_button: Entity,
-    ) -> StateMachine {
-        let ground_contact = GroundContact;
-        let jump_trigger = ButtonTrigger {button: jump_button};
-        state_machine
-            .trans::<Grounded>(ground_contact.not(), Airborne)
-            .trans::<Airborne>(ground_contact, Grounded)
-            .trans::<Grounded>(jump_trigger, JumpingUp)
-            .trans::<JumpingUp>(jump_trigger.not(), Airborne)
-            .trans::<JumpingUp>(DoneTrigger::Success, Airborne)
-            .set_trans_logging(true)
-    }
-    pub fn set_default_state_components (
-        state_machine: StateMachine,
-    ) -> StateMachine {
-        let state_machine = insert_while_state::<Grounded, _>(state_machine, GroundedDefaultBundle {
-            locomotion: BasicLocomotion { speed: 4.0, max_acceleration: 2.0 },
-            rotation: CharacterRotation,
-            head_rotation: HeadRotation,
-        });
-        let state_machine = insert_while_state::<Airborne, _>(state_machine, AirborneDefaultBundle {
-            locomotion: AirborneLocomotion { speed: 1.0, max_acceleration: 0.2 },
-            rotation: CharacterRotation,
-            head_rotation: HeadRotation,
-        });
-        let state_machine = insert_while_state::<JumpingUp, _>(state_machine, JumpingUpDefaultBundle {
-            timeout: Timeout { duration: 0.1, elapsed_time: 0.0 },
-            jump: JumpUp {target_velocity: 20.0 * Vec3::Y, max_acceleration: 1.0},
-            locomotion: BasicLocomotion { speed: 4.0, max_acceleration: 2.0 },
-            rotation: CharacterRotation,
-            head_rotation: HeadRotation,
-        });
-        state_machine
-    }
-}
+
 #[derive(Component)]
 pub struct GroundedStateMachine;
 #[derive(Clone, Component, Reflect)]
@@ -81,13 +44,50 @@ pub struct Airborne;
 #[component(storage = "SparseSet")]
 pub struct JumpingUp;
 
-#[derive(Bundle, Clone, Copy)]
+#[derive(Copy, Clone)]
+pub struct GroundContact;
+impl BoolTrigger for GroundContact {
+    type Param<'w, 's> = Res<'w, RapierContext>;
+    fn trigger(
+        &self,
+        entity: Entity,
+        rapier_context: Self::Param<'_, '_>,
+    ) -> bool {
+        let intersections = rapier_context.intersections_with(entity);
+        0 < intersections.count()
+    }
+}
+
+impl GroundedStateMachine {
+    pub fn default_machine (
+        jump_button: Entity,
+    ) -> StateMachine {
+        let ground_contact = GroundContact;
+        let jump_trigger = ButtonTrigger {button: jump_button};
+        StateMachine::default()
+            .trans::<Grounded>(ground_contact.not(), Airborne)
+            .trans::<Airborne>(ground_contact, Grounded)
+            .trans::<Grounded>(jump_trigger, JumpingUp)
+            .trans::<JumpingUp>(jump_trigger.not(), Airborne)
+            .trans::<JumpingUp>(DoneTrigger::Success, Airborne)
+            .set_trans_logging(true)
+    }
+    pub fn set_state_components_sample (
+        state_machine: StateMachine,
+    ) -> StateMachine {
+        let state_machine = insert_while_state::<Grounded, _>(state_machine, GroundedDefaultBundle::default());
+        let state_machine = insert_while_state::<Airborne, _>(state_machine, AirborneDefaultBundle::default());
+        let state_machine = insert_while_state::<JumpingUp, _>(state_machine, JumpingUpDefaultBundle::default());
+        state_machine
+    }
+}
+#[derive(Bundle, Default, Clone, Copy)]
 pub struct GroundedDefaultBundle {
     pub locomotion: BasicLocomotion,
     pub rotation: CharacterRotation,
     pub head_rotation: HeadRotation,
 }
-#[derive(Bundle, Clone, Copy)]
+#[derive(Bundle, Default, Clone, Copy)]
 pub struct AirborneDefaultBundle {
     pub locomotion: AirborneLocomotion,
     pub rotation: CharacterRotation,
@@ -101,17 +101,14 @@ pub struct JumpingUpDefaultBundle {
     pub rotation: CharacterRotation,
     pub head_rotation: HeadRotation,
 }
-
-#[derive(Copy, Clone)]
-pub struct GroundContact;
-impl BoolTrigger for GroundContact {
-    type Param<'w, 's> = Res<'w, RapierContext>;
-    fn trigger(
-        &self,
-        entity: Entity,
-        rapier_context: Self::Param<'_, '_>,
-    ) -> bool {
-        let intersections = rapier_context.intersections_with(entity);
-        0 < intersections.count()
+impl Default for JumpingUpDefaultBundle {
+    fn default() -> Self {
+        Self {
+            timeout: Timeout::new(0.1),
+            jump: JumpUp::default(),
+            locomotion: BasicLocomotion::default(),
+            rotation: CharacterRotation,
+            head_rotation: HeadRotation,
+        }
     }
 }

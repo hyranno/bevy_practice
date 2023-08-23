@@ -14,7 +14,7 @@ use seldom_state::prelude::*;
 
 use cascade_input::CascadeInputPlugin;
 use character_control::{
-    grounded_states::GroundedStateMachineBundle,
+    grounded_states::{GroundedStateMachineBundle, GroundedStateMachine},
     CharacterControlPlugin, AttachedInput, Locomotion, HeadAttitude, Jump, Rotation, HeadBundle,
 };
 use player_input::{PlayerInputPlugin, create_player_inputs};
@@ -132,9 +132,8 @@ fn setup(
                 }
             ));
         });
-        let grounded_state_machine = StateMachine::default();
-        let grounded_state_machine = GroundedStateMachineBundle::set_default_transitions(grounded_state_machine, controller.jump);
-        let grounded_state_machine = GroundedStateMachineBundle::set_default_state_components(grounded_state_machine);
+        let grounded_state_machine = GroundedStateMachine::default_machine(controller.jump);
+        let grounded_state_machine = GroundedStateMachine::set_state_components_sample(grounded_state_machine);
         player.spawn(GroundedStateMachineBundle {
             state_machine: grounded_state_machine,
             sensor: Collider::ball(0.2),
