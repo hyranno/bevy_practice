@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use seldom_state::prelude::*;
 
 use crate::cascade_input::{
     CascadeInputSet,
@@ -14,32 +13,12 @@ pub struct LocomotionSystemPlugin;
 impl Plugin for LocomotionSystemPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, timeout)
             .add_systems(Update, (jump_up, character_rotation, head_rotation).after(CascadeInputSet::Flush))
             .add_systems(Update, (basic_locomotion, airborne_locomotion).after(character_rotation))
         ;
     }
 }
 
-
-#[derive(Component, Clone, Copy)]
-pub struct Timeout {
-    pub duration: f32,
-    pub elapsed_time: f32,
-}
-pub fn timeout (
-    mut commands: Commands,
-    mut params: Query<(Entity, &mut Timeout)>,
-    time: Res<Time>,
-) {
-    let delta = time.delta_seconds();
-    for (state_machine, mut param) in params.iter_mut() {
-        param.elapsed_time += delta;
-        if param.duration < param.elapsed_time {
-            commands.entity(state_machine).insert(Done::Success);
-        }
-    }
-}
 
 #[derive(Component, Clone, Copy)]
 pub struct JumpUp {

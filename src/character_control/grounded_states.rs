@@ -2,19 +2,13 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use seldom_state::prelude::*;
 
-use crate::cascade_input::button_like::ButtonTrigger;
+use crate::{
+    util::state_machine::{insert_while_state, Timeout},
+    cascade_input::button_like::ButtonTrigger,
+};
 
-use super::locomotion_system::{BasicLocomotion, AirborneLocomotion, JumpUp, Timeout, CharacterRotation, HeadRotation};
+use super::locomotion_system::{BasicLocomotion, AirborneLocomotion, JumpUp, CharacterRotation, HeadRotation};
 
-pub fn insert_while_state<State, B> (
-    state_machine: StateMachine,
-    bundle: B,
-) -> StateMachine
-where State: Component + Clone, B: Bundle + Clone + Copy {
-    state_machine
-        .on_enter::<State>(move |commands| {commands.insert(bundle);})
-        .on_exit::<State>(|commands| {commands.remove::<B>();})
-}
 
 #[derive(Bundle)]
 pub struct GroundedStateMachineBundle {
