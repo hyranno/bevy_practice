@@ -9,7 +9,7 @@ use bevy::{
     core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
 };
 use bevy_rapier3d::prelude::*;
-use global_settings::collision_group;
+use global_settings::NamedCollisionGroup;
 use projectile_spawner::{ProjectileSpawnerPlugin, SimpleBallProjectileSpawner};
 use seldom_state::prelude::*;
 
@@ -68,7 +68,7 @@ fn setup(
             ..default()
         })
         .insert(Collider::cuboid(50.0, 0.001, 50.0))
-        .insert(CollisionGroups::new(collision_group::TERRAIN, collision_group::ALL))
+        .insert(CollisionGroups::new(NamedCollisionGroup::TERRAIN, NamedCollisionGroup::ALL))
     ;
     // cube
     commands
@@ -80,7 +80,7 @@ fn setup(
         })
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(0.5, 0.5, 0.5))
-        .insert(CollisionGroups::new(collision_group::OBJECT, collision_group::ALL))
+        .insert(CollisionGroups::new(NamedCollisionGroup::OBJECT, NamedCollisionGroup::ALL))
         .insert(Restitution::coefficient(0.1));
     // light
     commands
@@ -111,7 +111,7 @@ fn setup(
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Collider::capsule_y(1.5, 0.3))
-        .insert(CollisionGroups::new(collision_group::CHARACTER, collision_group::ALL))
+        .insert(CollisionGroups::new(NamedCollisionGroup::CHARACTER, NamedCollisionGroup::ALL))
         .insert(KinematicCharacterController {..default()})
     ;
     //controller

@@ -1,6 +1,8 @@
 
-pub mod collision_group {
-    use bevy_rapier3d::geometry::Group;
+use bevy_rapier3d::geometry::Group;
+
+pub struct NamedCollisionGroup;
+impl NamedCollisionGroup {
     pub const ALL: Group = Group::ALL;
 
     // pub const SOLID: Group = TERRAIN | OBJECT | CHARACTER;   // operator must be const
