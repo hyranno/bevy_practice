@@ -4,7 +4,7 @@ use seldom_state::prelude::*;
 
 use crate::{
     util::state_machine::{insert_while_state, Timeout},
-    cascade_input::button_like::ButtonTrigger,
+    cascade_input::button_like::ButtonTrigger, global_settings::collision_group,
 };
 
 use super::locomotion_system::{BasicLocomotion, AirborneLocomotion, JumpUp, CharacterRotation, HeadRotation};
@@ -17,6 +17,7 @@ pub struct GroundedStateMachineBundle {
     pub transform: TransformBundle,
     pub label: GroundedStateMachine,
     pub sensor_label: Sensor,
+    pub collision_groups: CollisionGroups,
     pub initial_state: Grounded,
 }
 impl Default for GroundedStateMachineBundle {
@@ -27,6 +28,7 @@ impl Default for GroundedStateMachineBundle {
             transform: TransformBundle::default(),
             label: GroundedStateMachine,
             sensor_label: Sensor,
+            collision_groups: CollisionGroups::new(collision_group::PURE_SENSOR, collision_group::TERRAIN | collision_group::OBJECT),
             initial_state: Grounded,
         }
     }

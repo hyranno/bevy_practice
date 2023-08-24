@@ -9,6 +9,7 @@ use bevy::{
     core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
 };
 use bevy_rapier3d::prelude::*;
+use global_settings::collision_group;
 use projectile_spawner::{ProjectileSpawnerPlugin, SimpleBallProjectileSpawner};
 use seldom_state::prelude::*;
 
@@ -21,6 +22,7 @@ use player_input::{PlayerInputPlugin, create_player_inputs};
 use util::{state_machine::StateMachineUtilPlugin, ecs::EcsUtilPlugin};
 
 mod util;
+mod global_settings;
 mod cascade_input;
 mod character_control;
 mod player_input;
@@ -65,7 +67,9 @@ fn setup(
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..default()
         })
-        .insert(Collider::cuboid(50.0, 0.001, 50.0));
+        .insert(Collider::cuboid(50.0, 0.001, 50.0))
+        .insert(CollisionGroups::new(collision_group::TERRAIN, collision_group::ALL))
+    ;
     // cube
     commands
         .spawn(PbrBundle {
@@ -76,6 +80,7 @@ fn setup(
         })
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(0.5, 0.5, 0.5))
+        .insert(CollisionGroups::new(collision_group::OBJECT, collision_group::ALL))
         .insert(Restitution::coefficient(0.1));
     // light
     commands
@@ -106,6 +111,7 @@ fn setup(
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Collider::capsule_y(1.5, 0.3))
+        .insert(CollisionGroups::new(collision_group::CHARACTER, collision_group::ALL))
         .insert(KinematicCharacterController {..default()})
     ;
     //controller
