@@ -18,7 +18,7 @@ use character_control::{
     CharacterControlPlugin, AttachedInput, Locomotion, HeadAttitude, Jump, Rotation, HeadBundle,
 };
 use player_input::{PlayerInputPlugin, create_player_inputs};
-use util::state_machine::StateMachineUtilPlugin;
+use util::{state_machine::StateMachineUtilPlugin, ecs::EcsUtilPlugin};
 
 mod util;
 mod cascade_input;
@@ -30,7 +30,7 @@ fn main() {
     let mut app = App::new();
     setup_app(&mut app)
         .add_plugins((RapierPhysicsPlugin::<NoUserData>::default(), StateMachinePlugin,))
-        .add_plugins((CascadeInputPlugin, StateMachineUtilPlugin, CharacterControlPlugin, PlayerInputPlugin, ProjectileSpawnerPlugin, ))
+        .add_plugins((CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin, CharacterControlPlugin, PlayerInputPlugin, ProjectileSpawnerPlugin, ))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
     ;

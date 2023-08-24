@@ -4,6 +4,39 @@ use std::{
     marker::PhantomData,
 };
 
+pub struct EcsUtilPlugin;
+impl Plugin for EcsUtilPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(Update, (Lifetime::update, ))
+        ;
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct Lifetime {
+    pub duration: f32,
+    pub elapsed_time: f32,
+}
+impl Lifetime {
+    pub fn new(duration: f32) -> Self {
+        Self { duration, elapsed_time: 0.0 }
+    }
+    fn update (
+        mut commands: Commands,
+        mut query: Query<(Entity, &mut Lifetime)>,
+        time: Res<Time>,
+    ) {
+        let delta = time.delta_seconds();
+        for (entity, mut lifetime) in query.iter_mut() {
+            lifetime.elapsed_time += delta;
+            if lifetime.duration < lifetime.elapsed_time {
+                commands.entity(entity).despawn();
+            }
+        }
+    }
+}
+
 #[derive(Component, Default)]
 pub struct ComponentWrapper<T, ComponentLabel>
     where ComponentLabel: Clone + Eq + Send + Sync + 'static

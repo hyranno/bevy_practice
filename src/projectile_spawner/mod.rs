@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::cascade_input::{button_like::{ButtonInput, ButtonLike}, CascadeInputSet};
+use crate::{cascade_input::{button_like::{ButtonInput, ButtonLike}, CascadeInputSet}, util::ecs::Lifetime};
 
 pub struct ProjectileSpawnerPlugin;
 impl Plugin for ProjectileSpawnerPlugin {
@@ -36,6 +36,7 @@ struct SimpleBallProjectileBundle {
     model: PbrBundle,
     collider: Collider,
     rigid_body: RigidBody,
+    lifetime: Lifetime,
 }
 impl FromWorld for SimpleBallProjectileBundle {
     fn from_world(world: &mut World) -> Self {
@@ -53,6 +54,7 @@ impl FromWorld for SimpleBallProjectileBundle {
             },
             collider: Collider::ball(0.1),
             rigid_body: RigidBody::Dynamic,
+            lifetime: Lifetime::new(2.0),
         }
     }
 }
