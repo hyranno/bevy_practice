@@ -8,8 +8,35 @@ impl Plugin for ProjectileSpawnerPlugin {
     fn build(&self, app: &mut App) {
         app
             .init_resource::<SimpleBallProjectileBundle>()
-            .add_systems(Update, fire_simple_ball.after(CascadeInputSet::Flush))
+            .add_systems(Update, (count_ricochet, fire_simple_ball.after(CascadeInputSet::Flush)))
         ;
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct RicochetCount {
+    pub remains: u32,
+}
+impl Default for RicochetCount {
+    fn default() -> Self {
+        Self {
+            remains: 1,
+        }
+    }
+}
+fn count_ricochet (
+    mut commands: Commands,
+    mut projectiles: Query<(Entity, &mut RicochetCount)>,
+    rapier_context: Res<RapierContext>,
+) {
+    for (projectile, mut count) in projectiles.iter_mut() {
+        let contacts = rapier_context.contacts_with(projectile).filter(|pair| pair.has_any_active_contacts());
+        if 0 < contacts.count() {
+            count.remains -= 1;
+        }
+        if count.remains <= 0 {
+            commands.entity(projectile).despawn();
+        }
     }
 }
 
@@ -37,6 +64,7 @@ struct SimpleBallProjectileBundle {
     collider: Collider,
     rigid_body: RigidBody,
     lifetime: Lifetime,
+    ricochet: RicochetCount,
 }
 impl FromWorld for SimpleBallProjectileBundle {
     fn from_world(world: &mut World) -> Self {
@@ -55,6 +83,7 @@ impl FromWorld for SimpleBallProjectileBundle {
             collider: Collider::ball(0.1),
             rigid_body: RigidBody::Dynamic,
             lifetime: Lifetime::new(2.0),
+            ricochet: RicochetCount::default(),
         }
     }
 }
