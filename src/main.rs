@@ -26,6 +26,7 @@ mod global_settings;
 mod cascade_input;
 mod character_control;
 mod player_input;
+mod attack;
 mod projectile_spawner;
 
 fn main() {
