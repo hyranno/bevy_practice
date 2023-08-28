@@ -68,18 +68,30 @@ impl Default for HitAreaBundle {
 
 
 fn hit (
-    mut hit_areas: Query<(Entity, &mut HitArea), With<Collider>>,
-    mut attack_areas: Query<(Entity, &mut AttackArea), (With<Collider>, Without<HitArea>)>,
+    mut hit_areas: Query<(Entity, &mut HitArea, Option<&Sensor>), With<Collider>>,
+    mut attack_areas: Query<(Entity, &mut AttackArea), With<Collider>>,
     rapier_context: Res<RapierContext>,
 ) {
-    for (hit_entity, mut hit_area) in hit_areas.iter_mut() {
-        let collided_entities = rapier_context.intersections_with(hit_entity).filter_map(
-            |(e1, e2, intersect)| if intersect {
-                Some(if hit_entity == e1 {e2} else {e1})
-            } else {
-                None
-            }
-        );
+    for (hit_entity, mut hit_area, sensor) in hit_areas.iter_mut() {
+        let collided_entities: Vec<Entity> = if sensor.is_some() {
+            rapier_context.intersections_with(hit_entity).filter_map(
+                |(e1, e2, intersect)| if intersect {
+                    Some(if hit_entity == e1 {e2} else {e1})
+                } else {
+                    None
+                }
+            ).collect()
+        } else {
+            rapier_context.contacts_with(hit_entity).filter_map(
+                |contact| if contact.has_any_active_contacts() {
+                    let e1 = contact.collider1();
+                    let e2 = contact.collider2();
+                    Some(if hit_entity == e1 {e2} else {e1})
+                } else {
+                    None
+                }
+            ).collect()
+        };
         for collided_entity in collided_entities {
             let Ok((attack_entity, mut attack_area)) = attack_areas.get_mut(collided_entity) else {
                 // not Attack
