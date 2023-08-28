@@ -13,6 +13,28 @@ impl Plugin for ProjectileSpawnerPlugin {
     }
 }
 
+#[derive(Bundle, Clone)]
+struct ProjectileTemplateBundle {
+    velocity: Velocity,
+    collider: Collider,
+    rigid_body: RigidBody,
+    lifetime: Lifetime,
+    ricochet: RicochetCount,
+    collision_group: CollisionGroups,
+}
+impl Default for ProjectileTemplateBundle {
+    fn default() -> Self {
+        Self {
+            velocity: Velocity::default(),
+            collider: Collider::default(),
+            rigid_body: RigidBody::Dynamic,
+            lifetime: Lifetime::new(2.0),
+            ricochet: RicochetCount::default(),
+            collision_group: CollisionGroups::new(NamedCollisionGroup::PROJECTILE, NamedCollisionGroup::ALL - NamedCollisionGroup::PROJECTILE),
+        }
+    }
+}
+
 #[derive(Component, Clone, Copy)]
 pub struct RicochetCount {
     pub remains: u32,
@@ -59,13 +81,8 @@ fn fire_simple_ball(
 
 #[derive(Resource, Bundle, Clone)]
 struct SimpleBallProjectileBundle {
-    velocity: Velocity,
     model: PbrBundle,
-    collider: Collider,
-    rigid_body: RigidBody,
-    lifetime: Lifetime,
-    ricochet: RicochetCount,
-    collision_group: CollisionGroups,
+    projectile: ProjectileTemplateBundle,
 }
 impl FromWorld for SimpleBallProjectileBundle {
     fn from_world(world: &mut World) -> Self {
@@ -73,19 +90,16 @@ impl FromWorld for SimpleBallProjectileBundle {
         let mesh = meshes.add(Mesh::try_from(shape::Icosphere { radius: 0.1, ..default() }).unwrap());
         let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
         let material = materials.add(Color::rgb(0.2, 0.2, 0.2).into());
-        // TODO set collider_group, filter
         Self {
-            velocity: Velocity::default(),
             model: PbrBundle {
                 mesh: mesh,
                 material: material,
                 ..default()
             },
-            collider: Collider::ball(0.1),
-            rigid_body: RigidBody::Dynamic,
-            lifetime: Lifetime::new(2.0),
-            ricochet: RicochetCount::default(),
-            collision_group: CollisionGroups::new(NamedCollisionGroup::PROJECTILE, NamedCollisionGroup::ALL - NamedCollisionGroup::PROJECTILE),
+            projectile: ProjectileTemplateBundle {
+                collider: Collider::ball(0.1),
+                ..default()
+            }
         }
     }
 }
