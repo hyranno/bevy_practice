@@ -6,6 +6,19 @@ use bevy::{
 };
 use seldom_state::trigger::BoolTrigger;
 
+use super::CascadeInputSet;
+
+
+pub struct ButtonInputPlugin;
+impl Plugin for ButtonInputPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(Update, update_key_mapped_buttons.in_set(CascadeInputSet::DeviceMappedInputs))
+            .add_systems(PostUpdate, clear_button_events)
+        ;
+    }
+}
+
 #[derive(Component, Clone)]
 pub struct ButtonInput {
     state: ButtonState,
@@ -42,7 +55,7 @@ impl ButtonInput {
     pub fn events(&self) -> Vec<ButtonState> { self.events.clone() }
 }
 
-pub fn clear_button_events (
+fn clear_button_events (
     mut buttons: Query<&mut ButtonInput>,
 ) {
     for mut button in buttons.iter_mut() {
@@ -89,7 +102,7 @@ impl MappedDeviceButton {
     }
 }
 
-pub fn update_key_mapped_buttons (
+fn update_key_mapped_buttons (
     mut buttons: Query<(&mut ButtonInput, &MappedDeviceButton)>,
     mut keyboard_input_events: EventReader<KeyboardInput>,
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
