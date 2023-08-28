@@ -67,7 +67,8 @@ fn setup(
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..default()
         })
-        .insert(Collider::cuboid(50.0, 0.001, 50.0))
+        .insert(Collider::cuboid(50.0, 0.01, 50.0))
+        .insert(Friction::coefficient(0.8))
         .insert(CollisionGroups::new(NamedCollisionGroup::TERRAIN, NamedCollisionGroup::ALL))
     ;
     // cube
@@ -111,6 +112,7 @@ fn setup(
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Collider::capsule_y(1.5, 0.3))
+        .insert(Friction::coefficient(0.98))
         .insert(CollisionGroups::new(NamedCollisionGroup::CHARACTER, NamedCollisionGroup::ALL))
         .insert(KinematicCharacterController {..default()})
     ;
