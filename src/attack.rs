@@ -10,6 +10,7 @@ impl Plugin for AttackPlugin {
         app
             .add_systems(Update, hit)
             .add_systems(PostUpdate, clear_hit)
+            .add_systems(PostUpdate, trace_hit.before(clear_hit))
         ;
     }
 }
@@ -23,7 +24,7 @@ pub struct AttackArea {
 pub struct HitArea {
     pub events: Vec<HitEvent>,
 }
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct HitEvent {
     pub hit_on: Entity,
     pub attack: Entity,
@@ -81,7 +82,7 @@ fn hit (
         );
         for collided_entity in collided_entities {
             let Ok((attack_entity, mut attack_area)) = attack_areas.get_mut(collided_entity) else {
-                warn!("Hit by Attack-group Collider without AttackArea!");
+                // not Attack
                 continue;
             };
             let event = HitEvent {hit_on: hit_entity, attack: attack_entity};
@@ -103,4 +104,12 @@ fn clear_hit (
     }
 }
 
-// TODO clear events
+fn trace_hit (
+    hit_areas: Query<&HitArea>,
+) {
+    for hit_area in hit_areas.iter() {
+        if 0 < hit_area.events.len() {
+            info!("{:?}", hit_area.events);
+        }
+    }
+}

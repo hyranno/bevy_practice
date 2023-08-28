@@ -1,4 +1,5 @@
 
+use attack::{AttackPlugin, HitArea};
 use bevy::prelude::*;
 #[cfg(not(target_family="wasm"))]
 use bevy::{
@@ -33,7 +34,7 @@ fn main() {
     let mut app = App::new();
     setup_app(&mut app)
         .add_plugins((RapierPhysicsPlugin::<NoUserData>::default(), StateMachinePlugin,))
-        .add_plugins((CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin, CharacterControlPlugin, PlayerInputPlugin, ProjectileSpawnerPlugin, ))
+        .add_plugins((CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin, CharacterControlPlugin, PlayerInputPlugin, AttackPlugin, ProjectileSpawnerPlugin, ))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
     ;
@@ -82,7 +83,9 @@ fn setup(
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(0.5, 0.5, 0.5))
         .insert(CollisionGroups::new(NamedCollisionGroup::OBJECT, NamedCollisionGroup::ALL))
-        .insert(Restitution::coefficient(0.1));
+        .insert(Restitution::coefficient(0.1))
+        .insert(HitArea::default())
+    ;
     // light
     commands
         .insert_resource(AmbientLight {

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{cascade_input::{button_like::{ButtonInput, ButtonLike}, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup};
+use crate::{cascade_input::{button_like::{ButtonInput, ButtonLike}, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup, attack::AttackArea};
 
 pub struct ProjectileSpawnerPlugin;
 impl Plugin for ProjectileSpawnerPlugin {
@@ -66,6 +66,7 @@ struct SimpleBallProjectileBundle {
     lifetime: Lifetime,
     ricochet: RicochetCount,
     collision_group: CollisionGroups,
+    attack: AttackArea,
 }
 impl FromWorld for SimpleBallProjectileBundle {
     fn from_world(world: &mut World) -> Self {
@@ -73,7 +74,6 @@ impl FromWorld for SimpleBallProjectileBundle {
         let mesh = meshes.add(Mesh::try_from(shape::Icosphere { radius: 0.1, ..default() }).unwrap());
         let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
         let material = materials.add(Color::rgb(0.2, 0.2, 0.2).into());
-        // TODO set collider_group, filter
         Self {
             velocity: Velocity::default(),
             model: PbrBundle {
@@ -85,7 +85,11 @@ impl FromWorld for SimpleBallProjectileBundle {
             rigid_body: RigidBody::Dynamic,
             lifetime: Lifetime::new(2.0),
             ricochet: RicochetCount::default(),
-            collision_group: CollisionGroups::new(NamedCollisionGroup::PROJECTILE, NamedCollisionGroup::ALL - NamedCollisionGroup::PROJECTILE),
+            collision_group: CollisionGroups::new(
+                NamedCollisionGroup::PROJECTILE | NamedCollisionGroup::ATTACK,
+                NamedCollisionGroup::ALL - NamedCollisionGroup::PROJECTILE
+            ),
+            attack: AttackArea::default(),
         }
     }
 }
