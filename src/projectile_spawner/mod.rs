@@ -21,6 +21,7 @@ struct ProjectileTemplateBundle {
     lifetime: Lifetime,
     ricochet: RicochetCount,
     collision_group: CollisionGroups,
+    ccd: Ccd,
 }
 impl Default for ProjectileTemplateBundle {
     fn default() -> Self {
@@ -31,6 +32,7 @@ impl Default for ProjectileTemplateBundle {
             lifetime: Lifetime::new(2.0),
             ricochet: RicochetCount::default(),
             collision_group: CollisionGroups::new(NamedCollisionGroup::PROJECTILE, NamedCollisionGroup::ALL - NamedCollisionGroup::PROJECTILE),
+            ccd: Ccd::enabled(),
         }
     }
 }

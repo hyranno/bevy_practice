@@ -129,7 +129,7 @@ fn setup(
             head.spawn((
                 SimpleBallProjectileSpawner {
                     trigger: controller.fire,
-                    muzzle_speed: 10.0,
+                    muzzle_speed: 40.0,
                 },
                 Velocity::default(),
                 TransformBundle {
