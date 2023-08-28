@@ -20,6 +20,7 @@ struct ProjectileTemplateBundle {
     rigid_body: RigidBody,
     lifetime: Lifetime,
     ricochet: RicochetCount,
+    restitution: Restitution,
     collision_group: CollisionGroups,
     ccd: Ccd,
 }
@@ -31,6 +32,7 @@ impl Default for ProjectileTemplateBundle {
             rigid_body: RigidBody::Dynamic,
             lifetime: Lifetime::new(2.0),
             ricochet: RicochetCount::default(),
+            restitution: Restitution::coefficient(0.4),
             collision_group: CollisionGroups::new(NamedCollisionGroup::PROJECTILE, NamedCollisionGroup::ALL - NamedCollisionGroup::PROJECTILE),
             ccd: Ccd::enabled(),
         }
