@@ -5,7 +5,7 @@ use bevy::{prelude::*, input::mouse::MouseMotion};
 
 use crate::util::ecs::ComponentWrapper;
 
-use super::button_like::{ButtonLike, ButtonInput};
+use super::button_like::ButtonInput;
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct StickLabel;

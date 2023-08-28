@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use self::{
-    button_like::update_key_mapped_buttons,
+    button_like::{update_key_mapped_buttons, clear_button_events},
     axis::update_mouse_mapped_sticks
 };
 
@@ -14,6 +14,7 @@ impl Plugin for CascadeInputPlugin {
             .configure_set(Update, CascadeInputSet::DeviceMappedInputs.in_set(CascadeInputSet::Flush))
             .add_systems(Update,update_key_mapped_buttons.in_set(CascadeInputSet::DeviceMappedInputs))
             .add_systems(Update,update_mouse_mapped_sticks.in_set(CascadeInputSet::DeviceMappedInputs))
+            .add_systems(PostUpdate, clear_button_events)
         ;
     }
 }

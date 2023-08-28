@@ -71,27 +71,27 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
 
     commands.with_children(|builder| {
         let negative_x = builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::A)),
         )).id();
         let positive_x = builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::D)),
         )).id();
         let negative_y = builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::S)),
         )).id();
         let positive_y = builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::W)),
         )).id();
         let walk_key = builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::C)),
         )).id();
         let walking = builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             Toggle::<WalkToggleLabel>::new(walk_key),
         )).id();
         let locomotion_stick = builder.spawn((
@@ -143,12 +143,12 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
         )).id());
 
         jump = Some(builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::Space)),
         )).id());
 
         fire = Some(builder.spawn((
-            ButtonInput::new(false),
+            ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Mouse(MouseButton::Left)),
         )).id());
 
@@ -181,7 +181,7 @@ fn update_walking(
             warn!("Entity not found");
             continue;
         };
-        if !**walking {continue;};
+        if walking.released() {continue;};
         let value = **stick * walk_mode.amp;
         // check real change for component change detection
         if **stick != value {
