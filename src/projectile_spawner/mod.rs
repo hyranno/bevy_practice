@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{cascade_input::{button_like::{ButtonInput, ButtonLike}, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup};
+use crate::{cascade_input::{button::ButtonInput, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup};
 
 pub struct ProjectileSpawnerPlugin;
 impl Plugin for ProjectileSpawnerPlugin {
@@ -48,7 +48,7 @@ fn fire_simple_ball(
 ) {
     for (spawner, transform) in spawners.iter() {
         let Ok(input) = inputs.get(spawner.trigger) else { continue; };
-        if !input.pressed() { continue; }
+        if !input.just_pressed() { continue; }
         let local_linvel = spawner.muzzle_speed * transform.forward();
         let mut projectile_builder = commands.spawn(bundle.clone());
         projectile_builder.insert(Transform::from(*transform));

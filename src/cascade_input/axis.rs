@@ -5,7 +5,18 @@ use bevy::{prelude::*, input::mouse::MouseMotion};
 
 use crate::util::ecs::ComponentWrapper;
 
-use super::button_like::{ButtonLike, ButtonInput};
+use super::{button::ButtonInput, CascadeInputSet};
+
+
+pub struct AxisInputPlugin;
+impl Plugin for AxisInputPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(Update, update_mouse_mapped_sticks.in_set(CascadeInputSet::DeviceMappedInputs))
+        ;
+    }
+}
+
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct StickLabel;
@@ -61,7 +72,7 @@ pub struct MappedMouse {
     pub sensitivity: Vec2,
 }
 
-pub fn update_mouse_mapped_sticks(
+fn update_mouse_mapped_sticks(
     mut sticks: Query<(&mut StickInput, &MappedMouse)>,
     mut mouse_motion_events: EventReader<MouseMotion>,
 ) {
