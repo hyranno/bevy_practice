@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{cascade_input::{button_like::ButtonInput, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup};
+use crate::{cascade_input::{button::ButtonInput, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup};
 
 pub struct ProjectileSpawnerPlugin;
 impl Plugin for ProjectileSpawnerPlugin {

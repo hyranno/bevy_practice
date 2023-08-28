@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use self::{
-    button_like::ButtonInputPlugin,
+    button::ButtonInputPlugin,
     axis::AxisInputPlugin,
 };
 
-pub mod button_like;
+pub mod button;
 pub mod axis;
 
 pub struct CascadeInputPlugin;

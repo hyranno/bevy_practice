@@ -4,7 +4,7 @@ use seldom_state::prelude::*;
 
 use crate::{
     util::state_machine::{insert_while_state, Timeout},
-    cascade_input::button_like::ButtonTrigger, global_settings::NamedCollisionGroup,
+    cascade_input::button::ButtonTrigger, global_settings::NamedCollisionGroup,
 };
 
 use super::locomotion_system::{BasicLocomotion, AirborneLocomotion, JumpUp, CharacterRotation, HeadRotation};

@@ -5,7 +5,7 @@ use bevy::{prelude::*, input::mouse::MouseMotion};
 
 use crate::util::ecs::ComponentWrapper;
 
-use super::{button_like::ButtonInput, CascadeInputSet};
+use super::{button::ButtonInput, CascadeInputSet};
 
 
 pub struct AxisInputPlugin;

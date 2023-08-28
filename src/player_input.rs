@@ -3,7 +3,7 @@ use bevy::{
 };
 use crate::cascade_input::{
     CascadeInputSet,
-    button_like::{ButtonInput, MappedDeviceButton, Toggle, update_toggle_buttons, DeviceButtonCode},
+    button::{ButtonInput, MappedDeviceButton, Toggle, update_toggle_buttons, DeviceButtonCode},
     axis::{StickInput, StickButtons, MappedMouse, MaxLength, DeadZone, update_four_button_axis, clamp_stick, PositionalInput, EulerAngleInput, update_rotation_from_euler, RotationalInput, MappedEulerAngle},
 };
 
