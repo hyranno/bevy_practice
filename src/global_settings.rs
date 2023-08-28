@@ -12,4 +12,5 @@ impl NamedCollisionGroup {
     pub const PROJECTILE: Group = Group::GROUP_4;
 
     pub const PURE_SENSOR: Group = Group::GROUP_8;
+    pub const ATTACK: Group = Group::GROUP_9;
 }

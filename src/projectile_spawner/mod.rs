@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{cascade_input::{button::ButtonInput, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup};
+use crate::{cascade_input::{button::ButtonInput, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup, attack::AttackArea};
 
 pub struct ProjectileSpawnerPlugin;
 impl Plugin for ProjectileSpawnerPlugin {
@@ -87,6 +87,7 @@ fn fire_simple_ball(
 struct SimpleBallProjectileBundle {
     model: PbrBundle,
     projectile: ProjectileTemplateBundle,
+    attack: AttackArea,
 }
 impl FromWorld for SimpleBallProjectileBundle {
     fn from_world(world: &mut World) -> Self {
@@ -102,8 +103,13 @@ impl FromWorld for SimpleBallProjectileBundle {
             },
             projectile: ProjectileTemplateBundle {
                 collider: Collider::ball(0.1),
+                collision_group: CollisionGroups::new(
+                    NamedCollisionGroup::PROJECTILE | NamedCollisionGroup::ATTACK,
+                    NamedCollisionGroup::ALL - NamedCollisionGroup::PROJECTILE
+                ),
                 ..default()
-            }
+            },
+            attack: AttackArea::default(),
         }
     }
 }
