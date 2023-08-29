@@ -144,7 +144,7 @@ pub struct AirborneLocomotion {
 }
 impl Default for AirborneLocomotion {
     fn default() -> Self {
-        Self { speed: 1.0, max_acceleration: 0.2 }
+        Self { speed: 2.0, max_acceleration: 0.4 }
     }
 }
 pub fn airborne_locomotion (
@@ -168,12 +168,13 @@ pub fn airborne_locomotion (
         if 0.0 < target.length() {
             let horizontal_velocity = Vec2::new(velocity.linvel.x, velocity.linvel.z);
             let target_direction = target.normalize();
-            let k = (horizontal_velocity.dot(target_direction) / param.speed).clamp(0.0, 1.0);
-            let acceleration = target * if 0.0 < k {
-                (1.0 - k) + k*horizontal_velocity.normalize().dot(target_direction)/2.0
+            let speed_coef = (horizontal_velocity.dot(target_direction) / param.speed).clamp(0.0, 1.0);
+            let directional_coef = if 0.0 < horizontal_velocity.length() {
+                horizontal_velocity.normalize().dot(target_direction)
             } else {
-                1.0
+                0.0
             };
+            let acceleration = target * ((1.0 - speed_coef) + speed_coef*(1.0-directional_coef)/2.0);
             // avoid false change detection
             if 0.0 < acceleration.length() {
                 velocity.linvel += Vec3::new(acceleration.x, 0.0, acceleration.y);
