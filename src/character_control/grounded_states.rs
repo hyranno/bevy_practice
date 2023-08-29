@@ -4,7 +4,7 @@ use seldom_state::prelude::*;
 
 use crate::{
     util::state_machine::{insert_while_state, Timeout},
-    cascade_input::button::ButtonTrigger, global_settings::NamedCollisionGroup,
+    cascade_input::button::{ButtonTrigger, ButtonJustPressedTrigger}, global_settings::NamedCollisionGroup,
 };
 
 use super::locomotion_system::{BasicLocomotion, AirborneLocomotion, JumpUp, CharacterRotation, HeadRotation};
@@ -65,12 +65,11 @@ impl GroundedStateMachine {
         jump_button: Entity,
     ) -> StateMachine {
         let ground_contact = GroundContact;
-        let jump_trigger = ButtonTrigger {button: jump_button};
         StateMachine::default()
             .trans::<Grounded>(ground_contact.not(), Airborne)
             .trans::<Airborne>(ground_contact, Grounded)
-            .trans::<Grounded>(jump_trigger, JumpingUp)
-            .trans::<JumpingUp>(jump_trigger.not(), Airborne)
+            .trans::<Grounded>(ButtonJustPressedTrigger { button: jump_button }, JumpingUp)
+            .trans::<JumpingUp>((ButtonTrigger { button: jump_button }).not(), Airborne)
             .trans::<JumpingUp>(DoneTrigger::Success, Airborne)
             .set_trans_logging(true)
     }

@@ -14,7 +14,7 @@ impl Plugin for ButtonInputPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(PreUpdate, update_key_mapped_buttons.in_set(CascadeInputSet::DeviceMappedInputs))
-            .add_systems(PostUpdate, clear_button_events)
+            .add_systems(PostUpdate, clear_button_events.after(seldom_state::set::StateSet::Transition))
         ;
     }
 }
@@ -81,6 +81,24 @@ impl BoolTrigger for ButtonTrigger {
             return false;
         };
         button.pressed()
+    }
+}
+#[derive(Clone, Copy)]
+pub struct ButtonJustPressedTrigger {
+    pub button: Entity,
+}
+impl BoolTrigger for ButtonJustPressedTrigger {
+    type Param<'w, 's> = Query<'w, 's, &'static ButtonInput>;
+    fn trigger(
+        &self,
+        _entity: Entity,
+        buttons: Self::Param<'_, '_>,
+    ) -> bool {
+        let Ok(button) = buttons.get(self.button) else {
+            warn!("Entity not found!");
+            return false;
+        };
+        button.just_pressed()
     }
 }
 
