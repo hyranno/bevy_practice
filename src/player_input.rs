@@ -14,38 +14,38 @@ pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update,
+            .add_systems(PreUpdate,
                 (
                     update_four_button_axis,
                 ).in_set(CascadeInputSet::Flush)
                 .after(CascadeInputSet::DeviceMappedInputs)
             )
-            .add_systems(Update,
+            .add_systems(PreUpdate,
                 clamp_stick
                 .in_set(CascadeInputSet::Flush)
                 .after(update_four_button_axis)
             )
-            .add_systems(Update,
+            .add_systems(PreUpdate,
                 update_toggle_buttons::<WalkToggleLabel>
                 .in_set(CascadeInputSet::Flush)
                 .after(CascadeInputSet::DeviceMappedInputs)
             )
-            .add_systems(Update,
+            .add_systems(PreUpdate,
                 update_walking
                 .in_set(CascadeInputSet::Flush)
                 .after(update_toggle_buttons::<WalkToggleLabel>)
             )
-            .add_systems(Update,
+            .add_systems(PreUpdate,
                 update_locomotion_from_stick
                 .in_set(CascadeInputSet::Flush)
                 .after(update_walking)
             )
-            .add_systems(Update,
+            .add_systems(PreUpdate,
                 update_rotation_from_stick
                 .in_set(CascadeInputSet::Flush)
                 .after(CascadeInputSet::DeviceMappedInputs)
             )
-            .add_systems(Update,
+            .add_systems(PreUpdate,
                 update_rotation_from_euler::<DummyLabel>
                 .in_set(CascadeInputSet::Flush)
                 .after(update_rotation_from_stick)

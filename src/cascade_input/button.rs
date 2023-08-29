@@ -13,7 +13,7 @@ pub struct ButtonInputPlugin;
 impl Plugin for ButtonInputPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, update_key_mapped_buttons.in_set(CascadeInputSet::DeviceMappedInputs))
+            .add_systems(PreUpdate, update_key_mapped_buttons.in_set(CascadeInputSet::DeviceMappedInputs))
             .add_systems(PostUpdate, clear_button_events)
         ;
     }

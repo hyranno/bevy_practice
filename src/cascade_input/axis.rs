@@ -12,7 +12,7 @@ pub struct AxisInputPlugin;
 impl Plugin for AxisInputPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, update_mouse_mapped_sticks.in_set(CascadeInputSet::DeviceMappedInputs))
+            .add_systems(PreUpdate, update_mouse_mapped_sticks.in_set(CascadeInputSet::DeviceMappedInputs))
         ;
     }
 }

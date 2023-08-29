@@ -11,7 +11,7 @@ pub struct CascadeInputPlugin;
 impl Plugin for CascadeInputPlugin {
     fn build(&self, app: &mut App) {
         app
-            .configure_set(Update, CascadeInputSet::DeviceMappedInputs.in_set(CascadeInputSet::Flush))
+            .configure_set(PreUpdate, CascadeInputSet::DeviceMappedInputs.in_set(CascadeInputSet::Flush))
             .add_plugins((ButtonInputPlugin, AxisInputPlugin, ))
         ;
     }

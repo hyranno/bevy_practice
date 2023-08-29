@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{cascade_input::{button::ButtonInput, CascadeInputSet}, util::ecs::Lifetime, global_settings::NamedCollisionGroup, attack::AttackArea};
+use crate::{cascade_input::button::ButtonInput, util::ecs::Lifetime, global_settings::NamedCollisionGroup, attack::AttackArea};
 
 pub struct ProjectileSpawnerPlugin;
 impl Plugin for ProjectileSpawnerPlugin {
     fn build(&self, app: &mut App) {
         app
             .init_resource::<SimpleBallProjectileBundle>()
-            .add_systems(Update, (count_ricochet, fire_simple_ball.after(CascadeInputSet::Flush)))
+            .add_systems(Update, (count_ricochet, fire_simple_ball))
         ;
     }
 }

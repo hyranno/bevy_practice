@@ -1,10 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::cascade_input::{
-    CascadeInputSet,
-    axis::{PositionalInput, RotationalInput}
-};
+use crate::cascade_input::axis::{PositionalInput, RotationalInput};
 
 use super::{Rotation, AttachedInput, HeadAttitude, Locomotion, Head};
 
@@ -13,7 +10,7 @@ pub struct LocomotionSystemPlugin;
 impl Plugin for LocomotionSystemPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, (jump_up, character_rotation, head_rotation).after(CascadeInputSet::Flush))
+            .add_systems(Update, (jump_up, character_rotation, head_rotation))
             .add_systems(Update, (basic_locomotion, airborne_locomotion).after(character_rotation))
         ;
     }
