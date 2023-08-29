@@ -11,7 +11,7 @@ use bevy::{
 };
 use bevy_rapier3d::prelude::*;
 use global_settings::NamedCollisionGroup;
-use projectile_spawner::{ProjectileSpawnerPlugin, SimpleBallProjectileSpawner};
+use projectile_spawner::{ProjectileSpawnerPlugin, simple_ball::SimpleBallProjectileSpawner};
 use seldom_state::prelude::*;
 
 use cascade_input::CascadeInputPlugin;
