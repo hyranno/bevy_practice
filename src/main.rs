@@ -136,7 +136,7 @@ fn setup(
         head.add_child(camera);
         head.with_children(|head| {
             head.spawn((
-                simple_ball::SimpleBallProjectileSpawnerBundle::new(controller.fire, controller.reload),
+                simple_ball::SpawnerBundle::new(controller.fire, controller.reload),
                 Velocity::default(),
                 TransformBundle {
                     local: Transform::from_xyz(0.0, 2.5, -1.0),

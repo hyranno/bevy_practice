@@ -11,19 +11,51 @@ pub struct SimpleBallPlugin;
 impl Plugin for SimpleBallPlugin {
     fn build(&self, app: &mut App) {
         app
-            .init_resource::<SimpleBallProjectileBundle>()
+            .init_resource::<ProjectileBundle>()
             .add_systems(Update, (fire, reload.after(timeout)))
         ;
     }
 }
 
+
+#[derive(Component)]
+pub struct ProjectileSpawner {
+    pub muzzle_speed: f32,
+}
+
+#[derive(Bundle)]
+pub struct SpawnerBundle {
+    spawner: ProjectileSpawner,
+    magazine: Magazine,
+    state_machine: StateMachine,
+    initial_state: Ready,
+}
+impl SpawnerBundle {
+    // use Builder pattern to castomize
+    pub fn new (
+        fire_button: Entity,
+        reload_button: Entity,
+    ) -> Self {
+        Self {
+            spawner: ProjectileSpawner { muzzle_speed: 40.0 },
+            magazine: Magazine {
+                capacity: 12,
+                ammo_count: 12,
+            },
+            state_machine: SemiAutoStateMachine::default_machine(fire_button, reload_button, 2.0, 1.3),
+            initial_state: Ready,
+        }
+    }
+}
+
+
 #[derive(Resource, Bundle, Clone)]
-struct SimpleBallProjectileBundle {
+struct ProjectileBundle {
     model: PbrBundle,
     projectile: ProjectileTemplateBundle,
     attack: AttackArea,
 }
-impl FromWorld for SimpleBallProjectileBundle {
+impl FromWorld for ProjectileBundle {
     fn from_world(world: &mut World) -> Self {
         let mut meshes = world.resource_mut::<Assets<Mesh>>();
         let mesh = meshes.add(Mesh::try_from(shape::Icosphere { radius: 0.1, ..default() }).unwrap());
@@ -48,41 +80,11 @@ impl FromWorld for SimpleBallProjectileBundle {
     }
 }
 
-#[derive(Component)]
-pub struct SimpleBallProjectileSpawner {
-    pub muzzle_speed: f32,
-}
-
-#[derive(Bundle)]
-pub struct SimpleBallProjectileSpawnerBundle {
-    spawner: SimpleBallProjectileSpawner,
-    magazine: Magazine,
-    state_machine: StateMachine,
-    initial_state: Ready,
-}
-impl SimpleBallProjectileSpawnerBundle {
-    // use Builder pattern to castomize
-    pub fn new (
-        fire_button: Entity,
-        reload_button: Entity,
-    ) -> Self {
-        Self {
-            spawner: SimpleBallProjectileSpawner { muzzle_speed: 40.0 },
-            magazine: Magazine {
-                capacity: 12,
-                ammo_count: 12,
-            },
-            state_machine: SemiAutoStateMachine::default_machine(fire_button, reload_button, 2.0, 1.3),
-            initial_state: Ready,
-        }
-    }
-}
-
 
 fn fire (
     mut commands: Commands,
-    mut spawners: Query<(&SimpleBallProjectileSpawner, &mut Magazine, &GlobalTransform), Added<Fire>>,
-    bundle: Res<SimpleBallProjectileBundle>,
+    mut spawners: Query<(&ProjectileSpawner, &mut Magazine, &GlobalTransform), Added<Fire>>,
+    bundle: Res<ProjectileBundle>,
 ) {
     for (spawner, mut magazine, transform) in spawners.iter_mut() {
         let local_linvel = spawner.muzzle_speed * transform.forward();
@@ -96,7 +98,7 @@ fn fire (
 }
 
 fn reload (
-    mut spawners: Query<(&mut Magazine, &Timeout), (With<SimpleBallProjectileSpawner>, With<Reload>)>,
+    mut spawners: Query<(&mut Magazine, &Timeout), (With<ProjectileSpawner>, With<Reload>)>,
 ) {
     for (mut magazine, timeout) in spawners.iter_mut() {
         if timeout.duration < timeout.elapsed_time {
