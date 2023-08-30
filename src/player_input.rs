@@ -61,6 +61,7 @@ pub struct PlayerInputs {
     pub head_attitude: Entity,
     pub jump: Entity,
     pub fire: Entity,
+    pub reload: Entity,
 }
 pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w, 's, 'a>) -> PlayerInputs {
     let mut locomotion = None;
@@ -68,6 +69,7 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
     let mut head_attitude = None;
     let mut jump = None;
     let mut fire = None;
+    let mut reload = None;
 
     commands.with_children(|builder| {
         let negative_x = builder.spawn((
@@ -151,6 +153,10 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
             ButtonInput::default(),
             MappedDeviceButton::new(DeviceButtonCode::Mouse(MouseButton::Left)),
         )).id());
+        reload = Some(builder.spawn((
+            ButtonInput::default(),
+            MappedDeviceButton::new(DeviceButtonCode::Key(KeyCode::R)),
+        )).id());
 
     });
 
@@ -159,7 +165,8 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
         rotation: rotation.unwrap(),
         head_attitude: head_attitude.unwrap(),
         jump: jump.unwrap(),
-        fire: fire.unwrap()
+        fire: fire.unwrap(),
+        reload: reload.unwrap(),
     }
 }
 

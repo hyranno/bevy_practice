@@ -6,6 +6,7 @@ use crate::{util::ecs::Lifetime, global_settings::NamedCollisionGroup, };
 use self::simple_ball::SimpleBallPlugin;
 
 
+pub mod states;
 pub mod simple_ball;
 
 
@@ -70,4 +71,14 @@ fn count_ricochet (
             commands.entity(projectile).despawn();
         }
     }
+}
+
+#[derive(Component, Clone, Debug)]
+pub struct Magazine {
+    pub capacity: u32,
+    pub ammo_count: u32,
+}
+impl Magazine {
+    pub fn is_full(&self) -> bool { self.ammo_count == self.capacity }
+    pub fn is_empty(&self) -> bool { self.ammo_count == 0 }
 }

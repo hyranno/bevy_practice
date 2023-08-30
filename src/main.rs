@@ -11,7 +11,10 @@ use bevy::{
 };
 use bevy_rapier3d::prelude::*;
 use global_settings::NamedCollisionGroup;
-use projectile_spawner::{ProjectileSpawnerPlugin, simple_ball::SimpleBallProjectileSpawner};
+use projectile_spawner::{
+    simple_ball,
+    ProjectileSpawnerPlugin,
+};
 use seldom_state::prelude::*;
 
 use cascade_input::CascadeInputPlugin;
@@ -133,10 +136,7 @@ fn setup(
         head.add_child(camera);
         head.with_children(|head| {
             head.spawn((
-                SimpleBallProjectileSpawner {
-                    trigger: controller.fire,
-                    muzzle_speed: 40.0,
-                },
+                simple_ball::SimpleBallProjectileSpawnerBundle::new(controller.fire, controller.reload),
                 Velocity::default(),
                 TransformBundle {
                     local: Transform::from_xyz(0.0, 2.5, -1.0),
