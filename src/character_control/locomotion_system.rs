@@ -17,6 +17,7 @@ impl Plugin for LocomotionSystemPlugin {
 }
 
 
+/// Parent continues to accelerate to target velocity.
 #[derive(Component, Clone, Copy)]
 pub struct JumpUp {
     pub target_velocity: Vec3,
@@ -46,6 +47,7 @@ pub fn jump_up (
     }
 }
 
+/// Parent rotates immediately.
 #[derive(Component, Default, Clone, Copy)]
 pub struct CharacterRotation;
 pub fn character_rotation(
@@ -68,6 +70,7 @@ pub fn character_rotation(
     }
 }
 
+/// Head of the parent rotates immediately.
 #[derive(Component, Default, Clone, Copy)]
 pub struct HeadRotation;
 pub fn head_rotation (
@@ -134,6 +137,7 @@ pub fn basic_locomotion (
     }
 }
 
+/// Horizontal locomotion intentionally enabling circle-jump-like infinite speed-up.
 #[derive(Component, Clone, Copy)]
 pub struct AirborneLocomotion {
     pub speed: f32,
@@ -158,7 +162,6 @@ pub fn airborne_locomotion (
             warn!("Entity not found!");
             continue;
         };
-        // This formula intentionally enables circle-jump like infinite speed-up
         let (_scale, rotation, _translation) = transform.to_scale_rotation_translation();
         let locomotion_global = rotation.mul_vec3(**locomotion);
         let target = param.max_acceleration * Vec2::new(locomotion_global.x, locomotion_global.z);    // xz() swizzling not found in Bevy

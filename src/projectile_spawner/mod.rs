@@ -1,3 +1,11 @@
+//! Deals with spawning of fast, small and mass-production objects, namely projectiles.
+//! 
+//! Projectiles need some optimization to dealt with.
+//! * Fast and small objects should taken care with CCD (Continuous Collision Detection) at performance cost.
+//! * Projectile-projectile collision can be ignored since projectiles are small,
+//!   and should be ignored due to their CCD costs and afraid of combinatorial explosion.
+//! * Mass-production objects should be cached to repeated draw or spawn.
+
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -46,6 +54,7 @@ impl Default for ProjectileTemplateBundle {
     }
 }
 
+/// Despawns after some collisions.
 #[derive(Component, Clone, Copy)]
 pub struct RicochetCount {
     pub remains: u32,

@@ -59,7 +59,7 @@ fn setup_app(app: &mut App) -> &mut App {
 struct Player;
 
 
-/// set up a simple 3D scene
+/// set up scene
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

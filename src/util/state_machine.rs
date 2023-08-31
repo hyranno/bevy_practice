@@ -20,6 +20,7 @@ where State: Component + Clone, B: Bundle + Clone + Copy {
         .on_exit::<State>(|commands| {commands.remove::<B>();})
 }
 
+/// Done after duration.
 #[derive(Component, Clone, Copy)]
 pub struct Timeout {
     pub duration: f32,

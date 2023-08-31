@@ -13,6 +13,7 @@ impl Plugin for EcsUtilPlugin {
     }
 }
 
+/// Despawns after lifetime.
 #[derive(Component, Clone, Copy)]
 pub struct Lifetime {
     pub duration: f32,
