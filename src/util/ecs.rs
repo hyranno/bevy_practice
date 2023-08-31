@@ -22,6 +22,9 @@ impl Lifetime {
     pub fn new(duration: f32) -> Self {
         Self { duration, elapsed_time: 0.0 }
     }
+    pub fn expired(&self) -> bool {
+        self.duration < self.elapsed_time
+    }
     fn update (
         mut commands: Commands,
         mut query: Query<(Entity, &mut Lifetime)>,
@@ -30,7 +33,7 @@ impl Lifetime {
         let delta = time.delta_seconds();
         for (entity, mut lifetime) in query.iter_mut() {
             lifetime.elapsed_time += delta;
-            if lifetime.duration < lifetime.elapsed_time {
+            if lifetime.expired() {
                 commands.entity(entity).despawn();
             }
         }

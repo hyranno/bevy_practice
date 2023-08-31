@@ -32,6 +32,9 @@ impl Timeout {
             elapsed_time: 0.0,
         }
     }
+    pub fn expired(&self) -> bool {
+        self.duration < self.elapsed_time
+    }
 }
 pub fn timeout (
     mut commands: Commands,
@@ -41,7 +44,7 @@ pub fn timeout (
     let delta = time.delta_seconds();
     for (state_machine, mut param) in params.iter_mut() {
         param.elapsed_time += delta;
-        if param.duration < param.elapsed_time {
+        if param.expired() {
             commands.entity(state_machine).insert(Done::Success);
         }
     }
