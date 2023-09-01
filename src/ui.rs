@@ -1,6 +1,8 @@
 use bevy::prelude::*;
+use bevy::core_pipeline::clear_color::ClearColorConfig;
 
 use crate::Player;
+use crate::global_settings::CameraOrder;
 use crate::projectile_spawner::Magazine;
 
 
@@ -15,6 +17,19 @@ impl Plugin for GameUiPlugin {
 
 
 pub fn spawn_ui (commands: &mut Commands) {
+    commands.spawn(
+        Camera2dBundle {
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::None,
+                ..default()
+            },
+            camera: Camera {
+                order: CameraOrder::Ui2d as isize,
+                ..default()
+            },
+            ..default()
+        }
+    );
     commands.spawn((
         TextBundle::from_sections([
             TextSection::from_style(TextStyle {

@@ -171,6 +171,9 @@ fn spawn_camera(commands: &mut Commands) -> Entity {
                 ..default()
             }
         )
+        .insert(UiCameraConfig {
+            show_ui: false,
+        })
         .insert(
             ScreenSpaceAmbientOcclusionBundle {
                 settings: ScreenSpaceAmbientOcclusionSettings {
@@ -192,6 +195,10 @@ fn spawn_camera(commands: &mut Commands) -> Entity {
             transform: Transform::from_xyz(0.0, 2.5, 0.0),
             ..default()
         },    
-    ).id()
+    )
+    .insert(    UiCameraConfig {
+        show_ui: false,
+    })
+    .id()
 }
 

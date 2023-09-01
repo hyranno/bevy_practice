@@ -14,3 +14,8 @@ impl NamedCollisionGroup {
     pub const PURE_SENSOR: Group = Group::GROUP_8;
     pub const ATTACK: Group = Group::GROUP_9;
 }
+
+pub enum CameraOrder {
+    _Main,
+    Ui2d,
+}
