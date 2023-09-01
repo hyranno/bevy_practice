@@ -9,14 +9,15 @@ use crate::projectile_spawner::Magazine;
 pub struct GameUiPlugin;
 impl Plugin for GameUiPlugin {
     fn build(&self, app: &mut App) {
-        app.
-            add_systems(PostUpdate, (update_magazine_ui, ))
+        app
+            .add_systems(Startup, spawn_ui)
+            .add_systems(PostUpdate, (update_magazine_ui, ))
         ;
     }
 }
 
 
-pub fn spawn_ui (commands: &mut Commands) {
+pub fn spawn_ui (mut commands: Commands) {
     commands.spawn(
         Camera2dBundle {
             camera_2d: Camera2d {

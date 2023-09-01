@@ -24,7 +24,7 @@ use character_control::{
 };
 use player_input::{PlayerInputPlugin, create_player_inputs};
 use util::{state_machine::StateMachineUtilPlugin, ecs::EcsUtilPlugin};
-use ui::{GameUiPlugin, spawn_ui};
+use ui::GameUiPlugin;
 
 mod util;
 mod global_settings;
@@ -159,7 +159,6 @@ fn setup(
             ..default()
         });
     });
-    spawn_ui(&mut commands);
 }
 
 #[cfg(not(target_family="wasm"))]
