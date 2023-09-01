@@ -1,5 +1,8 @@
-use bevy::prelude::*;
-use bevy::core_pipeline::clear_color::ClearColorConfig;
+use bevy::{
+    prelude::*,
+    core_pipeline::clear_color::ClearColorConfig,
+    sprite::MaterialMesh2dBundle,
+};
 
 use crate::Player;
 use crate::global_settings::CameraOrder;
@@ -17,7 +20,11 @@ impl Plugin for GameUiPlugin {
 }
 
 
-pub fn spawn_ui (mut commands: Commands) {
+pub fn spawn_ui (
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
     commands.spawn(
         Camera2dBundle {
             camera_2d: Camera2d {
@@ -31,6 +38,15 @@ pub fn spawn_ui (mut commands: Commands) {
             ..default()
         }
     );
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes.add(shape::Circle::new(3.).into()).into(),
+            material: materials.add(ColorMaterial::from(Color::WHITE)),
+            transform: Transform::from_translation(Vec3::new(0., 0., 0.)),
+            ..default()
+        },
+        Crosshair
+    ));
     commands.spawn((
         TextBundle::from_sections([
             TextSection::from_style(TextStyle {
@@ -47,6 +63,9 @@ pub fn spawn_ui (mut commands: Commands) {
         UiMagazine
     ));
 }
+
+#[derive(Component, Debug, Clone, Copy)]
+struct Crosshair;
 
 #[derive(Component, Debug, Clone, Copy)]
 struct UiMagazine;
