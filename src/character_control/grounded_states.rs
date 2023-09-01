@@ -94,7 +94,7 @@ pub struct AirborneDefaultBundle {
     pub rotation: CharacterRotation,
     pub head_rotation: HeadRotation,
 }
-#[derive(Bundle, Clone, Copy)]
+#[derive(Bundle, Clone)]
 pub struct JumpingUpDefaultBundle {
     pub timeout: Timeout,
     pub jump: JumpUp,

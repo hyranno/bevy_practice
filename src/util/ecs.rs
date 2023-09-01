@@ -14,27 +14,23 @@ impl Plugin for EcsUtilPlugin {
 }
 
 /// Despawns after lifetime.
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone)]
 pub struct Lifetime {
-    pub duration: f32,
-    pub elapsed_time: f32,
+    pub timer: Timer,
 }
 impl Lifetime {
     pub fn new(duration: f32) -> Self {
-        Self { duration, elapsed_time: 0.0 }
-    }
-    pub fn expired(&self) -> bool {
-        self.duration < self.elapsed_time
+        Self { timer: Timer::from_seconds(duration, TimerMode::Once) }
     }
     fn update (
         mut commands: Commands,
         mut query: Query<(Entity, &mut Lifetime)>,
         time: Res<Time>,
     ) {
-        let delta = time.delta_seconds();
+        let delta = time.delta();
         for (entity, mut lifetime) in query.iter_mut() {
-            lifetime.elapsed_time += delta;
-            if lifetime.expired() {
+            lifetime.timer.tick(delta);
+            if lifetime.timer.finished() {
                 commands.entity(entity).despawn();
             }
         }

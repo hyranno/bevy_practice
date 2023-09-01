@@ -101,7 +101,7 @@ fn reload (
     mut spawners: Query<(&mut Magazine, &Timeout), (With<ProjectileSpawner>, With<Reload>)>,
 ) {
     for (mut magazine, timeout) in spawners.iter_mut() {
-        if timeout.expired() {
+        if timeout.timer.finished() {
             magazine.ammo_count = magazine.capacity;
         }
     }

@@ -14,38 +14,31 @@ pub fn insert_while_state<State, B> (
     state_machine: StateMachine,
     bundle: B,
 ) -> StateMachine
-where State: Component + Clone, B: Bundle + Clone + Copy {
+where State: Component + Clone, B: Bundle + Clone {
     state_machine
-        .on_enter::<State>(move |commands| {commands.insert(bundle);})
+        .on_enter::<State>(move |commands| {commands.insert(bundle.clone());})
         .on_exit::<State>(|commands| {commands.remove::<B>();})
 }
 
 /// Done after duration.
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone)]
 pub struct Timeout {
-    pub duration: f32,
-    pub elapsed_time: f32,
+    pub timer: Timer,
 }
 impl Timeout {
     pub fn new(duration: f32) -> Self {
-        Self {
-            duration: duration,
-            elapsed_time: 0.0,
-        }
-    }
-    pub fn expired(&self) -> bool {
-        self.duration < self.elapsed_time
+        Self { timer: Timer::from_seconds(duration, TimerMode::Once) }
     }
 }
 pub fn timeout (
     mut commands: Commands,
-    mut params: Query<(Entity, &mut Timeout)>,
+    mut state_machines: Query<(Entity, &mut Timeout)>,
     time: Res<Time>,
 ) {
-    let delta = time.delta_seconds();
-    for (state_machine, mut param) in params.iter_mut() {
-        param.elapsed_time += delta;
-        if param.expired() {
+    let delta = time.delta();
+    for (state_machine, mut timeout) in state_machines.iter_mut() {
+        timeout.timer.tick(delta);
+        if timeout.timer.finished() {
             commands.entity(state_machine).insert(Done::Success);
         }
     }
