@@ -24,10 +24,12 @@ use character_control::{
 };
 use player_input::{PlayerInputPlugin, create_player_inputs};
 use util::{state_machine::StateMachineUtilPlugin, ecs::EcsUtilPlugin};
+use ui::{GameUiPlugin, spawn_ui};
 
 mod util;
 mod global_settings;
 mod cascade_input;
+mod ui;
 mod character_control;
 mod player_input;
 mod attack;
@@ -37,7 +39,11 @@ fn main() {
     let mut app = App::new();
     setup_app(&mut app)
         .add_plugins((RapierPhysicsPlugin::<NoUserData>::default(), StateMachinePlugin,))
-        .add_plugins((CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin, CharacterControlPlugin, PlayerInputPlugin, AttackPlugin, ProjectileSpawnerPlugin, ))
+        .add_plugins((
+            CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin,
+            CharacterControlPlugin, PlayerInputPlugin, AttackPlugin, ProjectileSpawnerPlugin,
+            GameUiPlugin,
+        ))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
     ;
@@ -153,6 +159,7 @@ fn setup(
             ..default()
         });
     });
+    spawn_ui(&mut commands);
 }
 
 #[cfg(not(target_family="wasm"))]
@@ -187,3 +194,4 @@ fn spawn_camera(commands: &mut Commands) -> Entity {
         },    
     ).id()
 }
+
