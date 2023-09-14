@@ -1,5 +1,6 @@
 
 use attack::{AttackPlugin, HitArea};
+use behavior_tree::BehaviorTreePlugin;
 use bevy::prelude::*;
 #[cfg(not(target_family="wasm"))]
 use bevy::{
@@ -29,11 +30,13 @@ use ui::GameUiPlugin;
 mod util;
 mod global_settings;
 mod cascade_input;
+mod behavior_tree;
 mod ui;
 mod character_control;
 mod player_input;
 mod attack;
 mod projectile_spawner;
+mod ai;
 
 fn main() {
     let mut app = App::new();
@@ -43,6 +46,7 @@ fn main() {
             CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin,
             CharacterControlPlugin, PlayerInputPlugin, AttackPlugin, ProjectileSpawnerPlugin,
             GameUiPlugin,
+            BehaviorTreePlugin,
         ))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
@@ -95,6 +99,10 @@ fn setup(
         .insert(CollisionGroups::new(NamedCollisionGroup::OBJECT, NamedCollisionGroup::ALL))
         .insert(Restitution::coefficient(0.1))
         .insert(HitArea::default())
+        .insert(Velocity::default())
+        .with_children(|parent| {
+            parent.spawn(ai::behavior::jump10());
+        })
     ;
     // light
     commands

@@ -8,8 +8,24 @@ pub struct EcsUtilPlugin;
 impl Plugin for EcsUtilPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, (Lifetime::update, ))
+            .add_systems(Update, (WrappedTimer::update, Lifetime::update, ))
         ;
+    }
+}
+
+#[derive(Debug, Component, Clone)]
+pub struct WrappedTimer {
+    pub timer: Timer,
+}
+impl WrappedTimer {
+    fn update (
+        mut query: Query<&mut WrappedTimer>,
+        time: Res<Time>,
+    ) {
+        let delta = time.delta();
+        for mut timer in query.iter_mut() {
+            timer.timer.tick(delta);
+        }
     }
 }
 

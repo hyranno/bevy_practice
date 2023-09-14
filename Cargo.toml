@@ -10,6 +10,7 @@ resolver = "2"
 bevy = { version = "0.11" }
 bevy_rapier3d = { version = "0.22" }
 seldom_state = { version = "0.7" }
+genawaiter = { version = "0.99" }
 
 [dev-dependencies]
 bevy = { version = "0.11", features = ["dynamic_linking"] }
