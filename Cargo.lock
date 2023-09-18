@@ -283,6 +283,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
+name = "bevior_tree"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5406e71d2a3ec4ede3437f47d2f8aa7625db8ecb3006ed9b7b61015ccf8b3452"
+dependencies = [
+ "bevy",
+ "genawaiter",
+]
+
+[[package]]
 name = "bevy"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -712,6 +722,7 @@ dependencies = [
 name = "bevy_practice"
 version = "0.1.0"
 dependencies = [
+ "bevior_tree",
  "bevy",
  "bevy_rapier3d",
  "genawaiter",

@@ -1,6 +1,6 @@
 
 use attack::{AttackPlugin, HitArea};
-use behavior_tree::BehaviorTreePlugin;
+use bevior_tree::BehaviorTreePlugin;
 use bevy::prelude::*;
 #[cfg(not(target_family="wasm"))]
 use bevy::{
@@ -30,7 +30,6 @@ use ui::GameUiPlugin;
 mod util;
 mod global_settings;
 mod cascade_input;
-mod behavior_tree;
 mod ui;
 mod character_control;
 mod player_input;

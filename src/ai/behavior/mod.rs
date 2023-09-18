@@ -3,33 +3,32 @@ use std::sync::Arc;
 
 use bevy::{prelude::*, ecs::system::SystemParam};
 
+use bevior_tree::{
+    BehaviorTree,
+    Node,
+    task::{TaskChecker, TaskState, TaskImpl, Task},
+    sequencial::Sequence,
+    decorator::{ConditionalLoop, RepeatCount},
+};
 use crate::{
-    behavior_tree::{task::{TaskChecker, TaskState, TaskImpl, Task}, Node, sequencial::Sequence, BehaviorTree},
     util::ecs::WrappedTimer,
     character_control::locomotion_system::JumpUp,
 };
 
 
 pub fn jump10() -> BehaviorTree {
-    let waiter = Arc::new(WaitTask::new(2.0));
-    let jumper = Arc::new(JumpTask::new(
+    let waiter = WaitTask::new(2.0);
+    let jumper = JumpTask::new(
         JumpUp { target_velocity: Vec3::Y, max_acceleration: 0.4 },
         0.2
-    ));
+    );
     let tasks: Vec<Arc<dyn Node>> = vec![
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
-        waiter.clone(), jumper.clone(),
+        waiter.clone(),
+        jumper.clone(),
     ];
-    let sequence = Arc::new(Sequence::new(tasks));
-    BehaviorTree::new(sequence)
+    let sequence = Sequence::new(tasks);
+    let repeat = ConditionalLoop::new(sequence, RepeatCount {count: 10});
+    BehaviorTree::new(repeat)
 }
 
 
@@ -39,18 +38,13 @@ pub struct WaitTask {
 impl WaitTask {
     pub fn new(
         duration: f32,
-    ) -> Self {
+    ) -> Arc<Self> {
         let task = TaskImpl::new(TimeChecker)
-            .on_enter(move |entity, mut commands| {
-                commands.entity(entity).insert(WrappedTimer { timer: Timer::from_seconds(duration, TimerMode::Once) });
-            })
-            .on_exit(|entity, mut commands| {
-                commands.entity(entity).remove::<WrappedTimer>();
-            })
+            .insert_while_running(WrappedTimer { timer: Timer::from_seconds(duration, TimerMode::Once) })
         ;
-        Self {
+        Arc::new(Self {
             task: Arc::new(task),
-        }
+        })
     }
 }
 impl Task for WaitTask {
@@ -67,24 +61,16 @@ impl JumpTask {
     pub fn new(
         jump: JumpUp,
         duration: f32,
-    ) -> Self {
+    ) -> Arc<Self> {
         let task = TaskImpl::new(TimeChecker)
-            .on_enter(move |entity, mut commands| {
-                commands.entity(entity)
-                    .insert(WrappedTimer { timer: Timer::from_seconds(duration, TimerMode::Once) })
-                    .insert(jump)
-                ;
-            })
-            .on_exit(|entity, mut commands| {
-                commands.entity(entity)
-                    .remove::<WrappedTimer>()
-                    .remove::<JumpUp>()
-                ;
-            })
+            .insert_while_running((
+                WrappedTimer { timer: Timer::from_seconds(duration, TimerMode::Once) },
+                jump,
+            ))
         ;
-        Self {
+        Arc::new(Self {
             task: Arc::new(task),
-        }
+        })
     }
 }
 impl Task for JumpTask {
