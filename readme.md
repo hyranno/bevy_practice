@@ -1,6 +1,6 @@
 # (WIP) FPS-themed practice with Bevy
 
-[wasm version playable](https://hyranno.github.io/bevy_practice)
+[wasm version playable](https://hyranno.github.io/bevy_practice/web_play)
 
 [doc](https://hyranno.github.io/bevy_practice/doc/bevy_practice/)
 
