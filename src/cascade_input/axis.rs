@@ -3,8 +3,6 @@ use std::marker::PhantomData;
 
 use bevy::{prelude::*, input::mouse::MouseMotion};
 
-use crate::util::ecs::ComponentWrapper;
-
 use super::{button::ButtonInput, CascadeInputSet};
 
 
@@ -18,21 +16,26 @@ impl Plugin for AxisInputPlugin {
 }
 
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
-pub struct StickLabel;
-pub type StickInput = ComponentWrapper<Vec2, StickLabel>;
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq)]
+pub struct StickInput {
+    pub value: Vec2,
+}
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
-pub struct PositionalInputLabel;
-pub type PositionalInput = ComponentWrapper<Vec3, PositionalInputLabel>;
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
-pub struct EulerAngleInputLabel;
-pub type EulerAngleInput = ComponentWrapper<Vec3, EulerAngleInputLabel>;
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq)]
+pub struct PositionalInput {
+    pub value: Vec3,
+}
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
-pub struct RotationalInputLabel;
-pub type RotationalInput = ComponentWrapper<Quat, RotationalInputLabel>;
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq)]
+pub struct EulerAngleInput {
+    pub value: Vec3,
+}
+
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq)]
+pub struct RotationalInput {
+    pub value: Quat,
+}
 
 #[derive(Component)]
 pub struct StickButtons {
@@ -60,14 +63,14 @@ pub fn update_four_button_axis (
             if negative_y.pressed() {-1.0} else {0.0} + if positive_y.pressed() {1.0} else {0.0},
         );
         // check real change for component change detection
-        if **stick != value {
-            **stick = value;
+        if stick.value != value {
+            stick.value = value;
         }
     }
 }
 
 
-#[derive(Component)]
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq)]
 pub struct MappedMouse {
     pub sensitivity: Vec2,
 }
@@ -80,20 +83,22 @@ fn update_mouse_mapped_sticks(
     for (mut stick, &MappedMouse {sensitivity}) in sticks.iter_mut() {
         let value = delta * sensitivity;
         // check real change for component change detection
-        if **stick != value {
-            **stick = value;
+        if stick.value != value {
+            stick.value = value;
         }
     }
 }
 
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct MaxLengthLabel;
-pub type MaxLength = ComponentWrapper<f32, MaxLengthLabel>;
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq)]
+pub struct MaxLength {
+    pub value: f32,
+}
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
-pub struct DeadZoneLabel;
-pub type DeadZone = ComponentWrapper<f32, DeadZoneLabel>;
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq)]
+pub struct DeadZone {
+    pub value: f32,
+}
 
 pub fn clamp_stick (
     mut sticks: Query<
@@ -102,15 +107,15 @@ pub fn clamp_stick (
     >,
 ) {
     for (mut stick, max_len, deadzone) in sticks.iter_mut() {
-        let len = stick.length();
+        let len = stick.value.length();
         if let Some(max_len) = max_len {
-            if **max_len < len {
-                **stick *= **max_len / len;
+            if max_len.value < len {
+                stick.value *= max_len.value / len;
             }
         }
         if let Some(deadzone) = deadzone {
-            if len < **deadzone {
-                **stick = Vec2::ZERO;
+            if len < deadzone.value {
+                stick.value = Vec2::ZERO;
             }
         }
     }
@@ -145,10 +150,10 @@ pub fn update_rotation_from_euler<SystemLabel> (
             warn!("Entity not found");
             continue;
         };
-        let value = Quat::from_euler(EulerRot::YXZ, source.y, source.x, source.z);
+        let value = Quat::from_euler(EulerRot::YXZ, source.value.y, source.value.x, source.value.z);
         // avoid false change detection
-        if **rotation != value {
-            **rotation = value;
+        if rotation.value != value {
+            rotation.value = value;
         }
     }
 }

@@ -97,35 +97,35 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
             Toggle::<WalkToggleLabel>::new(walk_key),
         )).id();
         let locomotion_stick = builder.spawn((
-            StickInput::new(Vec2::default()),
+            StickInput::default(),
             StickButtons {
                 negative_x: negative_x,
                 positive_x: positive_x,
                 negative_y: negative_y,
                 positive_y: positive_y,
             },
-            MaxLength::new(1.0),
-            DeadZone::new(0.0),
+            MaxLength {value: 1.0},
+            DeadZone {value: 0.0},
             WalkMode {
                 walking: walking,
                 amp: 0.5
             },
         )).id();
         locomotion = Some(builder.spawn((
-            PositionalInput::new(Vec3::default()),
+            PositionalInput::default(),
             MappedStick {
                 stick: locomotion_stick,
             }
         )).id());
 
         let rotation_euler = builder.spawn((
-            EulerAngleInput::new(Vec3::ZERO),
+            EulerAngleInput {value: Vec3::ZERO},
         )).id();
         let head_attitude_euler = builder.spawn((
-            EulerAngleInput::new(Vec3::ZERO),
+            EulerAngleInput {value: Vec3::ZERO},
         )).id();
         builder.spawn(( // rotation_stick
-            StickInput::new(Vec2::default()),
+            StickInput::default(),
             MappedMouse {
                 sensitivity: Vec2::new(0.0008, 0.0008),
             },
@@ -136,11 +136,11 @@ pub fn create_player_inputs<'w, 's, 'a, 'b>(commands: &'b mut EntityCommands<'w,
             }
         ));
         rotation = Some(builder.spawn((
-            RotationalInput::new(Quat::default()),
+            RotationalInput::default(),
             MappedEulerAngle::<DummyLabel>::new(rotation_euler),
         )).id());
         head_attitude = Some(builder.spawn((
-            RotationalInput::new(Quat::default()),
+            RotationalInput::default(),
             MappedEulerAngle::<DummyLabel>::new(head_attitude_euler),
         )).id());
 
@@ -189,10 +189,10 @@ fn update_walking(
             continue;
         };
         if walking.released() {continue;};
-        let value = **stick * walk_mode.amp;
+        let value = stick.value * walk_mode.amp;
         // check real change for component change detection
-        if **stick != value {
-            **stick = value;
+        if stick.value != value {
+            stick.value = value;
         }
     }
 }
@@ -211,10 +211,10 @@ fn update_locomotion_from_stick(
             warn!("Entity not found");
             continue;
         };
-        let value = Vec3::new(stick.x, 0.0, -stick.y);
+        let value = Vec3::new(stick.value.x, 0.0, -stick.value.y);
         // check real change for component change detection
-        if **locomotion != value {
-            **locomotion = value;
+        if locomotion.value != value {
+            locomotion.value = value;
         }
     }
 }
@@ -234,19 +234,19 @@ fn update_rotation_from_stick(
             warn!("Entity not found");
             continue;
         };
-        let rotation_value = Vec3::new(0.0, -target.sensitivity.x * stick.x, 0.0);
+        let rotation_value = Vec3::new(0.0, -target.sensitivity.x * stick.value.x, 0.0);
         // avoid false change detection
-        if **rotation != rotation_value {
-            **rotation = rotation_value;
+        if rotation.value != rotation_value {
+            rotation.value = rotation_value;
         }
         let Ok(mut head_attitude) = angles.get_mut(target.head_attitude) else {
             warn!("Entity not found");
             continue;
         };
-        let attitude_x = (head_attitude.x - target.sensitivity.y * stick.y).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
+        let attitude_x = (head_attitude.value.x - target.sensitivity.y * stick.value.y).clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
         // avoid false change detection
-        if head_attitude.x != attitude_x {
-            head_attitude.x = attitude_x;
+        if head_attitude.value.x != attitude_x {
+            head_attitude.value.x = attitude_x;
         }
     }
 }

@@ -61,10 +61,10 @@ pub fn character_rotation(
             continue;
         };
         // rotation
-        if let Ok(rotation) = rotational_inputs.get(**input) {
+        if let Ok(rotation) = rotational_inputs.get(input.entity) {
             // avoid false change detection
-            if **rotation != Quat::IDENTITY {
-                transform.rotate(**rotation);
+            if rotation.value != Quat::IDENTITY {
+                transform.rotate(rotation.value);
             }
         }
     }
@@ -84,17 +84,17 @@ pub fn head_rotation (
             warn!("Head not found!");
             continue;
         };
-        let Ok(inputs) = characters.get(parent.get()) else {
+        let Ok(input) = characters.get(parent.get()) else {
             warn!("Entity not found!");
             continue;
         };
-        let Ok(head_attitude) = rotational_inputs.get(**inputs) else {
+        let Ok(head_attitude) = rotational_inputs.get(input.entity) else {
             warn!("Entity not found!");
             continue;
         };
         // avoid false change detection
-        if transform.rotation != **head_attitude {
-            transform.rotation = **head_attitude;
+        if transform.rotation != head_attitude.value {
+            transform.rotation = head_attitude.value;
         }
     }
 }
@@ -119,12 +119,12 @@ pub fn basic_locomotion (
             warn!("Entity not found!");
             continue;
         };
-        let Ok(locomotion) = positional_inputs.get(**input) else {
+        let Ok(locomotion) = positional_inputs.get(input.entity) else {
             warn!("Entity not found!");
             continue;
         };
         let (_scale, rotation, _translation) = transform.to_scale_rotation_translation();
-        let target_velocity = param.speed * rotation.mul_vec3(**locomotion);
+        let target_velocity = param.speed * rotation.mul_vec3(locomotion.value);
         if 0.0 < target_velocity.length() {
             let target_direction = target_velocity.normalize();
             let speed_diff = target_velocity.length() - velocity.linvel.dot(target_direction);
@@ -158,12 +158,12 @@ pub fn airborne_locomotion (
             warn!("Entity not found!");
             continue;
         };
-        let Ok(locomotion) = positional_inputs.get(**input) else {
+        let Ok(locomotion) = positional_inputs.get(input.entity) else {
             warn!("Entity not found!");
             continue;
         };
         let (_scale, rotation, _translation) = transform.to_scale_rotation_translation();
-        let locomotion_global = rotation.mul_vec3(**locomotion);
+        let locomotion_global = rotation.mul_vec3(locomotion.value);
         let target = param.max_acceleration * Vec2::new(locomotion_global.x, locomotion_global.z);    // xz() swizzling not found in Bevy
         if 0.0 < target.length() {
             let horizontal_velocity = Vec2::new(velocity.linvel.x, velocity.linvel.z);

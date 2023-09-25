@@ -1,14 +1,26 @@
+use std::marker::PhantomData;
+
 use bevy::prelude::*;
 
 use locomotion_system::LocomotionSystemPlugin;
-
-use crate::util::ecs::ComponentWrapper;
 
 pub mod grounded_states;
 pub mod locomotion_system;
 
 
-pub type AttachedInput<Label> = ComponentWrapper<Entity, Label>;
+#[derive(Debug, Component)]
+pub struct AttachedInput<Label> {
+    entity: Entity,
+    _phantom: PhantomData<Label>,
+}
+impl<Label> AttachedInput<Label> {
+    pub fn new(entity: Entity) -> Self {
+        Self {
+            entity,
+            _phantom: PhantomData::<Label>::default()
+        }
+    }
+}
 
 #[derive(Component, Default)]
 pub struct Head;
