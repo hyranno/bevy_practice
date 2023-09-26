@@ -7,8 +7,8 @@ use bevior_tree::{
     BehaviorTree,
     Node,
     task::{TaskChecker, TaskState, TaskImpl, Task},
-    sequencial::Sequence,
-    decorator::{ConditionalLoop, RepeatCount},
+    sequential::variants::Sequence,
+    conditional::{ConditionalLoop, variants::RepeatCount},
 };
 use crate::{
     util::ecs::WrappedTimer,
