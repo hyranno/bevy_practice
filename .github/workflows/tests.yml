@@ -1,0 +1,49 @@
+name: Test
+
+on: [push]
+
+jobs:
+  test-native:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+        if: runner.os == 'linux'
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Test
+        run: cargo test
+    
+  test-wasm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+        if: runner.os == 'linux'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Build
+        run: cargo build --release --target wasm32-unknown-unknown --verbose
+
+      - name: Test
+        run: cargo test --target wasm32-unknown-unknown --verbose
