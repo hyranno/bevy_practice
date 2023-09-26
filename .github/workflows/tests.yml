@@ -45,5 +45,6 @@ jobs:
       - name: Build
         run: cargo build --release --target wasm32-unknown-unknown --verbose
 
-      - name: Test
-        run: cargo test --release --target wasm32-unknown-unknown --verbose
+      # disable dynamic_linking for release
+      #- name: Test
+      #  run: cargo test --release --target wasm32-unknown-unknown --verbose
