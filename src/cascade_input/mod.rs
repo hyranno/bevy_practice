@@ -25,6 +25,7 @@ pub struct CascadeInputPlugin;
 impl Plugin for CascadeInputPlugin {
     fn build(&self, app: &mut App) {
         app
+            .configure_set(PreUpdate, CascadeInputSet::Flush.after(CascadeInputSet::Begin))
             .configure_set(PreUpdate, CascadeInputSet::DeviceMappedInputs.in_set(CascadeInputSet::Flush))
             .configure_set(PostUpdate, CascadeInputSet::Clear.after(seldom_state::set::StateSet::Transition))
             .add_plugins((ButtonInputPlugin, AxisInputPlugin, ))
@@ -36,6 +37,7 @@ impl Plugin for CascadeInputPlugin {
 /// Your systems to update inputs will be in set of Flush, on PreUpdate stage.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 pub enum CascadeInputSet {
+    Begin,
     Flush,
     DeviceMappedInputs,
     Clear,

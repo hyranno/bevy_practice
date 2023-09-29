@@ -1,4 +1,5 @@
 
+use ai::AiPlugin;
 use attack::{AttackPlugin, HitArea};
 use bevior_tree::BehaviorTreePlugin;
 use bevy::prelude::*;
@@ -18,9 +19,9 @@ use projectile_spawner::{
 };
 use seldom_state::prelude::*;
 
-use cascade_input::CascadeInputPlugin;
+use cascade_input::{CascadeInputPlugin, axis::{PositionalInput, RotationalInput}};
 use character_control::{
-    grounded_states::{GroundedStateMachineBundle, GroundedStateMachine},
+    grounded_states::{GroundedStateMachineBundle, GroundedStateMachine, Grounded},
     CharacterControlPlugin, AttachedInput, Locomotion, HeadAttitude, Jump, Rotation, HeadBundle,
 };
 use player_input::{PlayerInputPlugin, create_player_inputs};
@@ -46,6 +47,7 @@ fn main() {
             CharacterControlPlugin, PlayerInputPlugin, AttackPlugin, ProjectileSpawnerPlugin,
             GameUiPlugin,
             BehaviorTreePlugin,
+            AiPlugin,
         ))
         .insert_resource(Msaa::Off)
         .add_systems(Startup, setup)
@@ -86,6 +88,8 @@ fn setup(
         .insert(CollisionGroups::new(NamedCollisionGroup::TERRAIN, NamedCollisionGroup::ALL))
     ;
     // cube
+    let locomotion = commands.spawn(PositionalInput::default()).id();
+    let rotation = commands.spawn(RotationalInput::default()).id();
     commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
@@ -99,8 +103,14 @@ fn setup(
         .insert(Restitution::coefficient(0.1))
         .insert(HitArea::default())
         .insert(Velocity::default())
+        .insert(Grounded)
+        .insert((AttachedInput::<Locomotion>::new(locomotion), AttachedInput::<Rotation>::new(rotation)))
+        .add_child(locomotion)
+        .insert(AttachedInput::<Locomotion>::new(locomotion))
+        .add_child(rotation)
+        .insert(AttachedInput::<Rotation>::new(rotation))
         .with_children(|parent| {
-            parent.spawn(ai::behavior::jump10());
+            parent.spawn(ai::behavior::sample_behavior());
         })
     ;
     // light

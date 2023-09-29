@@ -107,14 +107,11 @@ pub fn clamp_stick (
     >,
 ) {
     for (mut stick, max_len, deadzone) in sticks.iter_mut() {
-        let len = stick.value.length();
         if let Some(max_len) = max_len {
-            if max_len.value < len {
-                stick.value *= max_len.value / len;
-            }
+            stick.value = stick.value.clamp_length_max(max_len.value);
         }
         if let Some(deadzone) = deadzone {
-            if len < deadzone.value {
+            if stick.value.length() < deadzone.value {
                 stick.value = Vec2::ZERO;
             }
         }

@@ -10,7 +10,7 @@ pub mod locomotion_system;
 
 #[derive(Debug, Component)]
 pub struct AttachedInput<Label> {
-    entity: Entity,
+    pub entity: Entity,
     _phantom: PhantomData<Label>,
 }
 impl<Label> AttachedInput<Label> {
