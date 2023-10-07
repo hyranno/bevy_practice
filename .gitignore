@@ -1,5 +1,6 @@
 .vscode
 memo.txt
+/Cargo.lock
 /target
 /doc
 /web_play/*.wasm
