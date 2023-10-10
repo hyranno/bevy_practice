@@ -46,7 +46,7 @@ fn main() {
             CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin,
             CharacterControlPlugin, PlayerInputPlugin, AttackPlugin, ProjectileSpawnerPlugin,
             GameUiPlugin,
-            BehaviorTreePlugin,
+            BehaviorTreePlugin::default(),
             AiPlugin,
         ))
         .insert_resource(Msaa::Off)
