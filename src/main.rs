@@ -2,7 +2,7 @@
 use ai::AiPlugin;
 use attack::{AttackPlugin, HitArea};
 use bevior_tree::BehaviorTreePlugin;
-use bevy::prelude::*;
+use bevy::{prelude::*, input::keyboard::KeyboardInput};
 #[cfg(not(target_family="wasm"))]
 use bevy::{
     pbr::{
@@ -41,16 +41,39 @@ mod ai;
 fn main() {
     let mut app = App::new();
     setup_app(&mut app)
-        .add_plugins((RapierPhysicsPlugin::<NoUserData>::default(), StateMachinePlugin,))
         .add_plugins((
             CascadeInputPlugin, EcsUtilPlugin, StateMachineUtilPlugin,
             CharacterControlPlugin, PlayerInputPlugin, AttackPlugin, ProjectileSpawnerPlugin,
             GameUiPlugin,
-            BehaviorTreePlugin::default(),
             AiPlugin,
         ))
         .insert_resource(Msaa::Off)
+        .add_state::<GameStates>()
         .add_systems(Startup, setup)
+        .add_systems(Last, pause.run_if(in_state(GameStates::MainGame)))
+        .add_systems(Last, unpause.run_if(in_state(GameStates::Pause)))
+    ;
+    app
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        .configure_sets(PostUpdate, (
+            PhysicsSet::SyncBackend.run_if(in_state(GameStates::MainGame)),
+            PhysicsSet::SyncBackendFlush.run_if(in_state(GameStates::MainGame)),
+            PhysicsSet::StepSimulation.run_if(in_state(GameStates::MainGame)),
+            PhysicsSet::Writeback.run_if(in_state(GameStates::MainGame)),
+        ))
+    ;
+    app
+        .add_plugins(StateMachinePlugin)
+        .configure_sets(PostUpdate, (
+            seldom_state::set::StateSet::Transition.run_if(in_state(GameStates::MainGame)),
+            seldom_state::set::StateSet::RemoveDoneMarkers.run_if(in_state(GameStates::MainGame)),
+        ))
+    ;
+    app
+        .add_plugins(BehaviorTreePlugin::default())
+        .configure_sets(PostUpdate,(
+            bevior_tree::BehaviorTreeSystemSet::Update.run_if(in_state(GameStates::MainGame)),
+        ))
     ;
     app.run();
 }
@@ -64,6 +87,36 @@ fn setup_app(app: &mut App) -> &mut App {
 fn setup_app(app: &mut App) -> &mut App {
         app.add_plugins(DefaultPlugins)
 }
+
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Default, States)]
+enum GameStates {
+    #[default]
+    MainGame,
+    Pause,
+}
+
+fn pause (
+    mut keyboard_input_events: EventReader<KeyboardInput>,
+    mut state: ResMut<NextState<GameStates>>
+) {
+    if keyboard_input_events.iter().any(|event|
+        (event.key_code, event.state) == (Some(KeyCode::Escape), bevy::input::ButtonState::Pressed)
+    ) {
+        state.set(GameStates::Pause);
+    }
+}
+fn unpause (
+    mut keyboard_input_events: EventReader<KeyboardInput>,
+    mut state: ResMut<NextState<GameStates>>
+) {
+    if keyboard_input_events.iter().any(|event|
+        (event.key_code, event.state) == (Some(KeyCode::Escape), bevy::input::ButtonState::Pressed)
+    ) {
+        state.set(GameStates::MainGame);
+    }
+}
+
 
 
 #[derive(Component)]
